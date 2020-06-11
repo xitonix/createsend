@@ -74,6 +74,52 @@ func TestHeaders(t *testing.T) {
 	}
 }
 
+func TestNewHTTPSEnforcement(t *testing.T) {
+	testCases := []struct {
+		title    string
+		baseURL  string
+		expected string
+	}{
+		{
+			title:    "no URL scheme is defined with host name only",
+			baseURL:  "base.com",
+			expected: "https://base.com",
+		},
+		{
+			title:    "no URL scheme is defined with host name and path",
+			baseURL:  "base.com/some/path",
+			expected: "https://base.com/some/path",
+		},
+		{
+			title:    "http should be replaced with https when only host name is defined",
+			baseURL:  "http://base.com",
+			expected: "https://base.com",
+		},
+		{
+			title:    "http should be replaced with https when host name and path are defined",
+			baseURL:  "http://base.com/some/path",
+			expected: "https://base.com/some/path",
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			auth := &authentication{
+				method: apiKeyAuthentication,
+				token:  "api_key",
+			}
+			client, err := newHTTPClient(tC.baseURL, mock.NewHTTPClientMock(), auth)
+			if err != nil {
+				checkErrorType(t, err, false)
+			}
+			actual := client.baseURL.String()
+			if actual != tC.expected {
+				t.Errorf("Expected base URL: %s, actual: %s", tC.expected, actual)
+			}
+		})
+	}
+}
+
 func TestNewHTTPClient(t *testing.T) {
 	testCases := []struct {
 		title         string
