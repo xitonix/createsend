@@ -58,7 +58,7 @@ func TestHeaders(t *testing.T) {
 			}
 
 			if len(expectedHeaders) != len(request.Header) {
-				t.Errorf("Expected Headers Length: %d, Actual: %d", len(expectedHeaders), len(request.Header))
+				t.Errorf("Expected Headers Count: %d, Actual: %d", len(expectedHeaders), len(request.Header))
 			}
 
 			for key, expectedValue := range expectedHeaders {
@@ -323,6 +323,36 @@ func TestGet(t *testing.T) {
 			expectedResult: &result{},
 		},
 		{
+			title: "response status code 300 and above is considered a server side error",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 300,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
+			},
+			expectedError:  &Error{Code: 100},
+			expectedResult: &result{},
+		},
+		{
+			title: "response status code 199 and below is considered a server side error",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 199,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
+			},
+			expectedError:  &Error{Code: 100},
+			expectedResult: &result{},
+		},
+		{
+			title: "response status code between 200 and 300 is not considered a server side error",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 299,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"data":"d"}`)),
+			},
+			expectedError:  nil,
+			expectedResult: &result{Data: "d"},
+		},
+		{
 			title: "server side error with invalid createsend error body",
 			path:  "/path",
 			response: &http.Response{
@@ -342,8 +372,18 @@ func TestGet(t *testing.T) {
 			}
 
 			onCall := func(request *http.Request) {
+				if request.Method != http.MethodGet {
+					t.Errorf("Expected HTTP Method: %s, Actual: %s", http.MethodGet, request.Method)
+				}
+
+				actualURL := request.URL.String()
+				expectedUrl := base + tC.path
+				if actualURL != expectedUrl {
+					t.Errorf("Expected URL: %s, Actual: %s", expectedUrl, actualURL)
+				}
+
 				if len(expectedHeaderKeys) != len(request.Header) {
-					t.Errorf("Expected Headers Length: %d, Actual: %d", len(expectedHeaderKeys), len(request.Header))
+					t.Errorf("Expected Headers Count: %d, Actual: %d", len(expectedHeaderKeys), len(request.Header))
 				}
 
 				for _, key := range expectedHeaderKeys {
@@ -368,16 +408,16 @@ func TestGet(t *testing.T) {
 			var actualResult result
 			err = client.Get(base+tC.path, &actualResult)
 			if !test.CheckError(err, tC.expectedError) {
-				t.Errorf("Get: Expected '%v' error, but received: '%v'", tC.expectedError, err)
+				t.Errorf("Expected '%v' error, but received: '%v'", tC.expectedError, err)
 			}
 
 			if !reflect.DeepEqual(&actualResult, tC.expectedResult) {
-				t.Errorf("Get: Expected result: %+v, actual: %+v", tC.expectedResult, actualResult)
+				t.Errorf("Expected result: %+v, actual: %+v", tC.expectedResult, actualResult)
 			}
 
 			count := httpClient.Count(tC.path)
 			if count != 1 {
-				t.Errorf("Get: Expected number of calls: 1, actual: %d", count)
+				t.Errorf("Expected number of calls: 1, actual: %d", count)
 			}
 		})
 	}
