@@ -30,6 +30,13 @@ func newClientError(code ClientErrorCode) error {
 	}
 }
 
+// IsFromServer returns true if the error reported by the server.
+//
+// The method will return false if this is a client side error.
+func (e *Error) IsFromServer() bool {
+	return e.Code >= 0
+}
+
 func (e *Error) Unwrap() error {
 	return e.err
 }

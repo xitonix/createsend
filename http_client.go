@@ -91,7 +91,7 @@ func (h *httpClient) do(method, path string, result, body interface{}) error {
 	}
 	response, err := h.Do(request)
 	if err != nil {
-		return newWrappedClientError("Failed to execute the request", err, ErrCodeUnknown)
+		return newWrappedClientError("Failed to send the request", err, ErrCodeUnknown)
 	}
 
 	defer func() {
@@ -107,7 +107,6 @@ func (h *httpClient) do(method, path string, result, body interface{}) error {
 		csError.err = errors.New(csError.Message)
 		return &csError
 	}
-
 	if result != nil {
 		err = json.NewDecoder(response.Body).Decode(result)
 		if err != nil {

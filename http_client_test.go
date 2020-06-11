@@ -2,6 +2,7 @@ package createsend
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -40,7 +41,6 @@ func TestHeaders(t *testing.T) {
 		t.Run(tC.title, func(t *testing.T) {
 			httpClient := mock.NewHTTPClientMock()
 			client, err := newHTTPClient("https://base", httpClient, tC.auth)
-
 			if err != nil {
 				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
 			}
@@ -55,6 +55,10 @@ func TestHeaders(t *testing.T) {
 			_, err = client.Do(request)
 			if err != nil {
 				t.Errorf("Do: did not expect an error, but received '%s'", err)
+			}
+
+			if err != nil {
+				checkErrorType(t, err, false)
 			}
 
 			if len(expectedHeaders) != len(request.Header) {
@@ -200,6 +204,9 @@ func TestNewHTTPClient(t *testing.T) {
 			if !test.CheckError(err, tC.expectedError) {
 				t.Errorf("Client Creation: Expected '%v' error, but received: '%v'", tC.expectedError, err)
 			}
+			if err != nil {
+				checkErrorType(t, err, false)
+			}
 		})
 	}
 }
@@ -259,9 +266,17 @@ func TestGetFullURL(t *testing.T) {
 				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
 			}
 
+			if err != nil {
+				checkErrorType(t, err, false)
+			}
+
 			actual, err := client.getFullURL(tC.path)
 			if !test.CheckError(err, tC.expectedError) {
 				t.Errorf("Get Full URL: Expected '%v' error, but received: '%v'", tC.expectedError, err)
+			}
+
+			if err != nil {
+				checkErrorType(t, err, false)
 			}
 
 			if actual != tC.expectedURL {
@@ -282,20 +297,21 @@ func TestGet(t *testing.T) {
 		response              *http.Response
 		expectedResult        *result
 		expectedError         error
+		expectServerError     bool
 		forceRemoteCallToFail bool
 	}{
 		{
-			title: "empty body",
+			title: "the server must always return a json payload when result is requested by client",
 			path:  "/path",
 			response: &http.Response{
 				StatusCode: 200,
-				Body:       ioutil.NopCloser(bytes.NewBufferString(``)),
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
 			expectedError:  newClientError(ErrCodeInvalidJson),
 			expectedResult: &result{},
 		},
 		{
-			title: "none empty body",
+			title: "decoding valid json response from the server should not fail",
 			path:  "/path",
 			response: &http.Response{
 				StatusCode: 200,
@@ -305,7 +321,7 @@ func TestGet(t *testing.T) {
 			expectedResult: &result{Data: "d"},
 		},
 		{
-			title:                 "fail to call the server",
+			title:                 "the client must report failure if the underlying http client failed",
 			path:                  "/path",
 			response:              &http.Response{},
 			expectedError:         newClientError(ErrCodeUnknown),
@@ -313,37 +329,51 @@ func TestGet(t *testing.T) {
 			forceRemoteCallToFail: true,
 		},
 		{
-			title: "server side error with valid createsend error body",
+			title: "the client must return a server error when the server returns a failure http status code",
 			path:  "/path",
 			response: &http.Response{
 				StatusCode: 500,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
 			},
-			expectedError:  &Error{Code: 100},
-			expectedResult: &result{},
+			expectedError:     &Error{Code: 100},
+			expectedResult:    &result{},
+			expectServerError: true,
 		},
 		{
-			title: "response status code 300 and above is considered a server side error",
+			title: "response status code 300 is considered a server side error",
 			path:  "/path",
 			response: &http.Response{
 				StatusCode: 300,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
 			},
-			expectedError:  &Error{Code: 100},
-			expectedResult: &result{},
+			expectedError:     &Error{Code: 100},
+			expectedResult:    &result{},
+			expectServerError: true,
 		},
 		{
-			title: "response status code 199 and below is considered a server side error",
+			title: "response status code greater than 300 is considered a server side error",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 301,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
+			},
+			expectedError:     &Error{Code: 100},
+			expectedResult:    &result{},
+			expectServerError: true,
+		},
+		{
+			title: "response status code less than 200 is considered a server side error",
 			path:  "/path",
 			response: &http.Response{
 				StatusCode: 199,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
 			},
-			expectedError:  &Error{Code: 100},
-			expectedResult: &result{},
+			expectedError:     &Error{Code: 100},
+			expectedResult:    &result{},
+			expectServerError: true,
 		},
 		{
-			title: "response status code between 200 and 300 is not considered a server side error",
+			title: "response status code between 200 and 300 is considered a successful response",
 			path:  "/path",
 			response: &http.Response{
 				StatusCode: 299,
@@ -353,33 +383,36 @@ func TestGet(t *testing.T) {
 			expectedResult: &result{Data: "d"},
 		},
 		{
-			title: "server side error with invalid createsend error body",
+			title: "should fail to decode a server side error with invalid createsend error json content",
 			path:  "/path",
 			response: &http.Response{
 				StatusCode: 500,
-				Body:       ioutil.NopCloser(bytes.NewBufferString(``)),
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{I'm invalid Json'`)),
 			},
 			expectedError:  newClientError(ErrCodeInvalidJson),
 			expectedResult: &result{},
 		},
 	}
 
+	method := http.MethodGet
+	expectedHeaderKeys := []string{
+		userAgentHeaderKey,
+		authenticationHeaderKey,
+	}
+
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			expectedHeaderKeys := []string{
-				userAgentHeaderKey,
-				authenticationHeaderKey,
-			}
+
+			fullURL := base + tC.path
 
 			onCall := func(request *http.Request) {
-				if request.Method != http.MethodGet {
-					t.Errorf("Expected HTTP Method: %s, Actual: %s", http.MethodGet, request.Method)
+				if request.Method != method {
+					t.Errorf("Expected HTTP Method: %s, Actual: %s", method, request.Method)
 				}
 
 				actualURL := request.URL.String()
-				expectedUrl := base + tC.path
-				if actualURL != expectedUrl {
-					t.Errorf("Expected URL: %s, Actual: %s", expectedUrl, actualURL)
+				if actualURL != fullURL {
+					t.Errorf("Expected URL: %s, Actual: %s", fullURL, actualURL)
 				}
 
 				if len(expectedHeaderKeys) != len(request.Header) {
@@ -392,6 +425,7 @@ func TestGet(t *testing.T) {
 					}
 				}
 			}
+
 			httpClient := mock.NewHTTPClientMock(mock.WhenCalled(onCall), mock.ForceToFail(tC.forceRemoteCallToFail))
 			auth := &authentication{
 				token:  "api_key",
@@ -406,9 +440,13 @@ func TestGet(t *testing.T) {
 			httpClient.SetResponse(tC.path, tC.response)
 
 			var actualResult result
-			err = client.Get(base+tC.path, &actualResult)
+			err = client.Get(fullURL, &actualResult)
 			if !test.CheckError(err, tC.expectedError) {
 				t.Errorf("Expected '%v' error, but received: '%v'", tC.expectedError, err)
+			}
+
+			if err != nil {
+				checkErrorType(t, err, tC.expectServerError)
 			}
 
 			if !reflect.DeepEqual(&actualResult, tC.expectedResult) {
@@ -420,5 +458,17 @@ func TestGet(t *testing.T) {
 				t.Errorf("Expected number of calls: 1, actual: %d", count)
 			}
 		})
+	}
+}
+
+func checkErrorType(t *testing.T, err error, expectServerError bool) {
+	t.Helper()
+	var csErr *Error
+	ok := errors.As(err, &csErr)
+	if !ok {
+		t.Error("We should always return a custom createsend Error type")
+	}
+	if csErr.IsFromServer() != expectServerError {
+		t.Errorf("Expected server error: %v, actual: %v", expectServerError, csErr.IsFromServer())
 	}
 }
