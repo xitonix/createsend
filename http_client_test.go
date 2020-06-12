@@ -939,6 +939,145 @@ func TestPut(t *testing.T) {
 	}
 }
 
+func TestDelete(t *testing.T) {
+	const base = "https://base"
+	testCases := []struct {
+		title                 string
+		path                  string
+		response              *http.Response
+		expectedError         error
+		expectServerError     bool
+		forceRemoteCallToFail bool
+	}{
+		{
+			title:                 "the client must report failure if the underlying http client failed",
+			path:                  "/path",
+			response:              &http.Response{},
+			expectedError:         newClientError(ErrCodeUnknown),
+			forceRemoteCallToFail: true,
+		},
+		{
+			title: "the client must return a server error when the server returns a failure http status code",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
+			},
+			expectedError:     &Error{Code: 100},
+			expectServerError: true,
+		},
+		{
+			title: "response status code 300 is considered a server side error",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 300,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
+			},
+			expectedError:     &Error{Code: 100},
+			expectServerError: true,
+		},
+		{
+			title: "response status code greater than 300 is considered a server side error",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 301,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
+			},
+			expectedError:     &Error{Code: 100},
+			expectServerError: true,
+		},
+		{
+			title: "response status code less than 200 is considered a server side error",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 199,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
+			},
+			expectedError:     &Error{Code: 100},
+			expectServerError: true,
+		},
+		{
+			title: "response status code between 200 and 300 is considered a successful response",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 299,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"data":"d"}`)),
+			},
+			expectedError: nil,
+		},
+		{
+			title: "should fail to decode a server side error with invalid createsend error json content",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{I'm invalid Json'`)),
+			},
+			expectedError: newClientError(ErrCodeInvalidJson),
+		},
+	}
+
+	method := http.MethodDelete
+	expectedHeaderKeys := []string{
+		userAgentHeaderKey,
+		authenticationHeaderKey,
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+
+			fullURL := base + tC.path
+
+			onCall := func(request *http.Request) {
+				if request.Method != method {
+					t.Errorf("Expected HTTP Method: %s, Actual: %s", method, request.Method)
+				}
+
+				actualURL := request.URL.String()
+				if actualURL != fullURL {
+					t.Errorf("Expected URL: %s, Actual: %s", fullURL, actualURL)
+				}
+
+				if len(expectedHeaderKeys) != len(request.Header) {
+					t.Errorf("Expected Headers Count: %d, Actual: %d", len(expectedHeaderKeys), len(request.Header))
+				}
+
+				for _, key := range expectedHeaderKeys {
+					if _, ok := request.Header[key]; !ok {
+						t.Errorf("Expected Header [%s] was not found", key)
+					}
+				}
+			}
+
+			httpClient := mock.NewHTTPClientMock(mock.WhenCalled(onCall), mock.ForceToFail(tC.forceRemoteCallToFail))
+			auth := &authentication{
+				token:  "api_key",
+				method: apiKeyAuthentication,
+			}
+
+			client, err := newHTTPClient(base, httpClient, auth)
+			if err != nil {
+				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
+			}
+
+			httpClient.SetResponse(tC.path, tC.response)
+
+			err = client.Delete(fullURL)
+			if !test.CheckError(err, tC.expectedError) {
+				t.Errorf("Expected '%v' error, but received: '%v'", tC.expectedError, err)
+			}
+
+			if err != nil {
+				checkErrorType(t, err, tC.expectServerError)
+			}
+
+			count := httpClient.Count(tC.path)
+			if count != 1 {
+				t.Errorf("Expected number of calls: 1, actual: %d", count)
+			}
+		})
+	}
+}
+
 func checkRequestBody(t *testing.T, actual io.ReadCloser, expected *bodyMock) {
 	t.Helper()
 	defer actual.Close()
