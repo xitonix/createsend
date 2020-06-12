@@ -365,7 +365,7 @@ func TestAccountsAPI_Now(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"SystemDate":"01/12/2006T16:19:00"}`)),
 			},
-			expectedError: newClientError(ErrCodeDataProcessingError),
+			expectedError: newClientError(ErrCodeDataProcessing),
 			expected:      time.Time{},
 			parsingError:  true,
 		},

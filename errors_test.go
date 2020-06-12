@@ -18,15 +18,15 @@ func TestError_Error(t *testing.T) {
 		},
 		{
 			title:    "no internal error",
-			expected: "-1: " + ErrCodeDataProcessingError.String(),
+			expected: "-1: " + ErrCodeDataProcessing.String(),
 		},
 	}
 
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			err := newClientError(ErrCodeDataProcessingError)
+			err := newClientError(ErrCodeDataProcessing)
 			if tC.internal != nil {
-				err = newWrappedClientError("msg", tC.internal, ErrCodeDataProcessingError)
+				err = newWrappedClientError("msg", tC.internal, ErrCodeDataProcessing)
 			}
 
 			var csErr *Error

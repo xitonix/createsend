@@ -3,7 +3,7 @@ package createsend
 type ClientErrorCode int
 
 const (
-	ErrCodeDataProcessingError  ClientErrorCode = -1
+	ErrCodeDataProcessing       ClientErrorCode = -1
 	ErrCodeNilHTTPClient        ClientErrorCode = -2
 	ErrCodeAuthenticationNotSet ClientErrorCode = -3
 	ErrCodeEmptyOAuthToken      ClientErrorCode = -4

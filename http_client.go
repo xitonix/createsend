@@ -92,7 +92,7 @@ func (h *httpClient) do(method, path string, result, body interface{}) error {
 	}
 	response, err := h.Do(request)
 	if err != nil {
-		return newWrappedClientError("Failed to send the request", err, ErrCodeDataProcessingError)
+		return newWrappedClientError("Failed to send the request", err, ErrCodeDataProcessing)
 	}
 
 	defer func() {
@@ -147,7 +147,7 @@ func (h *httpClient) newRequest(method, path string, body interface{}) (*http.Re
 
 	request, err := http.NewRequest(method, fullURL, &buf)
 	if err != nil {
-		return nil, newWrappedClientError("Failed to create the web request", err, ErrCodeDataProcessingError)
+		return nil, newWrappedClientError("Failed to create the web request", err, ErrCodeDataProcessing)
 	}
 
 	return request, nil
