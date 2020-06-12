@@ -4,32 +4,38 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/xitonix/createsend/accounts"
 )
 
 const (
-	DefaultRetryCount = 3
-	DefaultBaseURL    = "https://api.createsend.com/api/v3.2/"
+	DefaultBaseURL = "https://api.createsend.com/api/v3.2/"
 )
 
 type Option func(*Options)
 
 type Options struct {
-	retryCount int
-	client     HTTPClient
-	auth       *authentication
-	baseURL    string
+	client   HTTPClient
+	auth     *authentication
+	baseURL  string
+	accounts accounts.API
 }
 
 func defaultOptions() *Options {
 	return &Options{
-		retryCount: DefaultRetryCount,
-		baseURL:    DefaultBaseURL,
+		baseURL: DefaultBaseURL,
 		auth: &authentication{
 			method: undefinedAuthentication,
 		},
 		client: &http.Client{
 			Timeout: 5 * time.Second,
 		},
+	}
+}
+
+func WithAccountsAPI(api accounts.API) Option {
+	return func(options *Options) {
+		options.accounts = api
 	}
 }
 
@@ -60,14 +66,5 @@ func WithOAuthToken(token string) Option {
 			token:  strings.TrimSpace(token),
 			method: oAuthAuthentication,
 		}
-	}
-}
-
-func WithRetryCount(count int) Option {
-	return func(options *Options) {
-		if count < 0 {
-			count = 0
-		}
-		options.retryCount = count
 	}
 }

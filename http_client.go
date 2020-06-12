@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -109,7 +110,9 @@ func (h *httpClient) do(method, path string, result, body interface{}) error {
 	}
 	if result != nil {
 		err = json.NewDecoder(response.Body).Decode(result)
-		if err != nil {
+		// io.EOF means that server returned an empty response
+		// Successful HTTP status code with an empty response is Ok!
+		if err != nil && !errors.Is(err, io.EOF) {
 			return newWrappedClientError("Failed to decode the server response", err, ErrCodeInvalidJson)
 		}
 	}

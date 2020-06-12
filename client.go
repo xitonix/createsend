@@ -1,11 +1,11 @@
 package createsend
 
 import (
-	"github.com/gojektech/heimdall/v6/hystrix"
+	"github.com/xitonix/createsend/accounts"
 )
 
 type Client struct {
-	client *hystrix.Client
+	accounts accounts.API
 }
 
 func New(options ...Option) (*Client, error) {
@@ -14,15 +14,19 @@ func New(options ...Option) (*Client, error) {
 		op(opts)
 	}
 
-	httpClient, err := newHTTPClient(opts.baseURL, opts.client, opts.auth)
+	hc, err := newHTTPClient(opts.baseURL, opts.client, opts.auth)
 	if err != nil {
 		return nil, err
 	}
 
-	client := hystrix.NewClient(
-		hystrix.WithRetryCount(opts.retryCount),
-		hystrix.WithHTTPClient(httpClient),
-	)
+	client := &Client{}
+	if opts.accounts == nil {
+		client.accounts = newAccountAPI(hc)
+	}
 
-	return &Client{client: client}, nil
+	return client, nil
+}
+
+func (c *Client) Accounts() accounts.API {
+	return c.accounts
 }

@@ -259,6 +259,87 @@ func TestNewHTTPClient(t *testing.T) {
 	}
 }
 
+func TestNewRequest(t *testing.T) {
+	const base = "https://base"
+	testCases := []struct {
+		title         string
+		path          string
+		method        string
+		body          *bodyMock
+		expectedError error
+	}{
+		{
+			title:         "simulate invalid URL failure",
+			method:        http.MethodGet,
+			path:          "",
+			body:          newBodyMock(false),
+			expectedError: newClientError(ErrCodeEmptyURL),
+		},
+		{
+			title:         "simulate body encoding failure",
+			method:        http.MethodGet,
+			path:          "/path",
+			body:          newBodyMock(true),
+			expectedError: newClientError(ErrCodeInvalidRequestBody),
+		},
+		{
+			title:         "simulate request creation failure",
+			method:        "こんにちは",
+			path:          "/path",
+			body:          newBodyMock(false),
+			expectedError: newClientError(ErrCodeUnknown),
+		},
+		{
+			title:         "successful request creation",
+			method:        http.MethodPut,
+			path:          "/path",
+			body:          newBodyMock(false),
+			expectedError: nil,
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			httpClient := mock.NewHTTPClientMock()
+			auth := &authentication{
+				token:  "api_key",
+				method: apiKeyAuthentication,
+			}
+			client, err := newHTTPClient(base, httpClient, auth)
+			if err != nil {
+				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
+			}
+
+			if err != nil {
+				checkErrorType(t, err, false)
+			}
+
+			actual, err := client.newRequest(tC.method, tC.path, tC.body)
+			if !test.CheckError(err, tC.expectedError) {
+				t.Errorf("Expected '%v' error, but received: '%v'", tC.expectedError, err)
+			}
+
+			if err != nil {
+				checkErrorType(t, err, false)
+				return
+			}
+
+			expectedURL := base + tC.path
+
+			if actual.URL.String() != expectedURL {
+				t.Errorf("Expected request URL: %s, actual: %s", expectedURL, actual.URL.String())
+			}
+
+			if tC.method != actual.Method {
+				t.Errorf("Expected %s HTTP method, actual: %s", tC.method, actual.Method)
+			}
+
+			checkRequestBody(t, actual.Body, tC.body)
+
+		})
+	}
+}
+
 func TestGetFullURL(t *testing.T) {
 	const base = "https://base"
 	testCases := []struct {
@@ -349,13 +430,13 @@ func TestGet(t *testing.T) {
 		forceRemoteCallToFail bool
 	}{
 		{
-			title: "the server must always return a json payload when result is requested by client",
+			title: "a successful server response with an empty body is acceptable",
 			path:  "/path",
 			response: &http.Response{
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
-			expectedError:  newClientError(ErrCodeInvalidJson),
+			expectedError:  nil,
 			expectedResult: &result{},
 		},
 		{
@@ -435,6 +516,16 @@ func TestGet(t *testing.T) {
 			path:  "/path",
 			response: &http.Response{
 				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{I'm invalid Json'`)),
+			},
+			expectedError:  newClientError(ErrCodeInvalidJson),
+			expectedResult: &result{},
+		},
+		{
+			title: "should fail to decode the response with invalid json body",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 200,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`{I'm invalid Json'`)),
 			},
 			expectedError:  newClientError(ErrCodeInvalidJson),
@@ -527,13 +618,13 @@ func TestPost(t *testing.T) {
 		expectRemoteServerCallCount int
 	}{
 		{
-			title: "the server must always return a json payload when result is requested by client",
+			title: "a successful server response with an empty body is acceptable",
 			path:  "/path",
 			response: &http.Response{
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
-			expectedError:               newClientError(ErrCodeInvalidJson),
+			expectedError:               nil,
 			expectedResult:              &result{},
 			expectRemoteServerCallCount: 1,
 		},
@@ -650,6 +741,17 @@ func TestPost(t *testing.T) {
 			body:                        newBodyMock(true),
 			expectedResult:              &result{},
 			expectRemoteServerCallCount: 0,
+		},
+		{
+			title: "should fail to decode the response with invalid json body",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{I'm invalid Json'`)),
+			},
+			expectedError:               newClientError(ErrCodeInvalidJson),
+			expectedResult:              &result{},
+			expectRemoteServerCallCount: 1,
 		},
 	}
 
@@ -742,13 +844,13 @@ func TestPut(t *testing.T) {
 		expectRemoteServerCallCount int
 	}{
 		{
-			title: "the server must always return a json payload when result is requested by client",
+			title: "a successful server response with an empty body is acceptable",
 			path:  "/path",
 			response: &http.Response{
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
-			expectedError:               newClientError(ErrCodeInvalidJson),
+			expectedError:               nil,
 			expectedResult:              &result{},
 			expectRemoteServerCallCount: 1,
 		},
@@ -865,6 +967,17 @@ func TestPut(t *testing.T) {
 			body:                        newBodyMock(true),
 			expectedResult:              &result{},
 			expectRemoteServerCallCount: 0,
+		},
+		{
+			title: "should fail to decode the response with invalid json body",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{I'm invalid Json'`)),
+			},
+			expectedError:               newClientError(ErrCodeInvalidJson),
+			expectedResult:              &result{},
+			expectRemoteServerCallCount: 1,
 		},
 	}
 
@@ -1089,6 +1202,13 @@ func checkRequestBody(t *testing.T, actual io.ReadCloser, expected *bodyMock) {
 	err = json.Unmarshal(b, &body)
 	if err != nil {
 		t.Errorf("Did not expect an error but received: '%v'", err)
+	}
+
+	if expected == nil {
+		if len(b) > 0 {
+			t.Errorf("The request body should have been empty")
+		}
+		return
 	}
 	if expected.Value != body.Value {
 		t.Errorf("Expected Request Body Value: %s, Actual: %s", expected.Value, body.Value)

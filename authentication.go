@@ -16,9 +16,6 @@ type authentication struct {
 }
 
 func (a *authentication) apply(request *http.Request) {
-	if request == nil {
-		return
-	}
 	switch a.method {
 	case apiKeyAuthentication:
 		request.SetBasicAuth(a.token, a.token)
