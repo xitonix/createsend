@@ -70,7 +70,7 @@ func (a *accountsAPI) Now() (time.Time, error) {
 	if result != nil && len(result.SystemDate) > 0 {
 		t, err := time.Parse("2006-01-02 15:04:05", result.SystemDate)
 		if err != nil {
-			return time.Time{}, newWrappedClientError("Failed to parse the server date value", err, ErrCodeParseServerResponse)
+			return time.Time{}, newWrappedClientError("Failed to parse the server date value", err, ErrCodeDataProcessingError)
 		}
 		return t, nil
 	}
