@@ -5,6 +5,12 @@ import (
 	"github.com/xitonix/createsend/internal"
 )
 
+const (
+	listClientsPath         = "clients.json"
+	fetchBillingDetailsPath = "billingdetails.json"
+	fetchValidCountriesPath = "countries.json"
+)
+
 type accountsAPI struct {
 	client internal.Client
 }
@@ -15,7 +21,7 @@ func newAccountAPI(client internal.Client) *accountsAPI {
 
 func (a *accountsAPI) Clients() ([]*accounts.Client, error) {
 	result := make([]*accounts.Client, 0)
-	err := a.client.Get("clients.json", &result)
+	err := a.client.Get(listClientsPath, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +30,16 @@ func (a *accountsAPI) Clients() ([]*accounts.Client, error) {
 
 func (a *accountsAPI) Billing() (*accounts.Billing, error) {
 	var result *accounts.Billing
-	err := a.client.Get("billingdetails.json", &result)
+	err := a.client.Get(fetchBillingDetailsPath, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (a *accountsAPI) Countries() ([]string, error) {
+	var result []string
+	err := a.client.Get(fetchValidCountriesPath, &result)
 	if err != nil {
 		return nil, err
 	}

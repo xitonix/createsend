@@ -3,6 +3,7 @@ package mock
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -31,6 +32,9 @@ func NewHTTPClientMock(options ...Option) *HTTPClientMock {
 func (h *HTTPClientMock) SetResponse(path string, response *http.Response) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
 	h.calls[path] = &result{
 		count:    0,
 		response: response,
@@ -43,10 +47,9 @@ func (h *HTTPClientMock) Do(request *http.Request) (*http.Response, error) {
 	if h.options.callback != nil {
 		h.options.callback(request)
 	}
-	path := request.URL.Path
-	call, ok := h.calls[path]
+	call, ok := h.calls[request.URL.Path]
 	if !ok {
-		return nil, fmt.Errorf("no mocked response has been setup for %s. make sure you call SetResponse method first", path)
+		return nil, fmt.Errorf("no mocked response has been setup for %s. make sure you call SetResponse method first", request.URL.Path)
 	}
 	call.count++
 	if h.options.forceToFail {

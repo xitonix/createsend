@@ -1,4 +1,4 @@
-package createsend_test
+package createsend
 
 import (
 	"bytes"
@@ -7,19 +7,18 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/xitonix/createsend"
 	"github.com/xitonix/createsend/accounts"
 	"github.com/xitonix/createsend/internal/test"
 	"github.com/xitonix/createsend/mock"
 )
 
-func TestClients(t *testing.T) {
+func TestAccountsAPI_Clients(t *testing.T) {
 	testCases := []struct {
-		title                 string
-		simulateServerFailure bool
-		response              *http.Response
-		expected              []*accounts.Client
-		expectedError         error
+		title                string
+		forceClientSideError bool
+		response             *http.Response
+		expected             []*accounts.Client
+		expectedError        error
 	}{
 		{
 			title: "account with no clients",
@@ -49,10 +48,10 @@ func TestClients(t *testing.T) {
 			}},
 		},
 		{
-			title:                 "simulate remote call failure",
-			response:              &http.Response{},
-			simulateServerFailure: true,
-			expectedError:         mock.ErrDeliberate,
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceClientSideError: true,
+			expectedError:        mock.ErrDeliberate,
 		},
 		{
 			title: "simulate server side error",
@@ -60,31 +59,29 @@ func TestClients(t *testing.T) {
 				StatusCode: 500,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
 			},
-			expectedError: &createsend.Error{Code: 500},
+			expectedError: &Error{Code: 500},
 		},
 	}
 
-	path := "/clients.json"
-
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.simulateServerFailure))
-			client, err := createsend.New(
-				createsend.WithBaseURL("https://base.com"),
-				createsend.WithHTTPClient(httpClient),
-				createsend.WithAPIKey("api_key"),
+			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
+			client, err := New(
+				WithBaseURL("https://base.com"),
+				WithHTTPClient(httpClient),
+				WithAPIKey("api_key"),
 			)
 			if err != nil {
 				t.Errorf("Did not expect an error but received: '%v'", err)
-				checkErrorType(t, err)
+				checkErrorType(t, err, true)
 			}
-			httpClient.SetResponse(path, tC.response)
+			httpClient.SetResponse(listClientsPath, tC.response)
 			actual, err := client.Accounts().Clients()
 			if err != nil {
 				if !test.CheckError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err)
+				checkErrorType(t, err, !tC.forceClientSideError)
 			}
 			if !reflect.DeepEqual(actual, tC.expected) {
 				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
@@ -93,13 +90,13 @@ func TestClients(t *testing.T) {
 	}
 }
 
-func TestBillingDetails(t *testing.T) {
+func TestAccountsAPI_Billing(t *testing.T) {
 	testCases := []struct {
-		title                 string
-		simulateServerFailure bool
-		response              *http.Response
-		expected              *accounts.Billing
-		expectedError         error
+		title                string
+		forceClientSideError bool
+		response             *http.Response
+		expected             *accounts.Billing
+		expectedError        error
 	}{
 		{
 			title: "account with no billing details",
@@ -128,10 +125,10 @@ func TestBillingDetails(t *testing.T) {
 			},
 		},
 		{
-			title:                 "simulate remote call failure",
-			response:              &http.Response{},
-			simulateServerFailure: true,
-			expectedError:         mock.ErrDeliberate,
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceClientSideError: true,
+			expectedError:        mock.ErrDeliberate,
 		},
 		{
 			title: "simulate server side error",
@@ -139,31 +136,104 @@ func TestBillingDetails(t *testing.T) {
 				StatusCode: 500,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
 			},
-			expectedError: &createsend.Error{Code: 500},
+			expectedError: &Error{Code: 500},
 		},
 	}
 
-	path := "/billingdetails.json"
-
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.simulateServerFailure))
-			client, err := createsend.New(
-				createsend.WithBaseURL("https://base.com"),
-				createsend.WithHTTPClient(httpClient),
-				createsend.WithAPIKey("api_key"),
+			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
+			client, err := New(
+				WithBaseURL("https://base.com"),
+				WithHTTPClient(httpClient),
+				WithAPIKey("api_key"),
 			)
 			if err != nil {
 				t.Errorf("Did not expect an error but received: '%v'", err)
-				checkErrorType(t, err)
+				checkErrorType(t, err, true)
 			}
-			httpClient.SetResponse(path, tC.response)
+			httpClient.SetResponse(fetchBillingDetailsPath, tC.response)
 			actual, err := client.Accounts().Billing()
 			if err != nil {
 				if !test.CheckError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err)
+				checkErrorType(t, err, !tC.forceClientSideError)
+			}
+			if !reflect.DeepEqual(actual, tC.expected) {
+				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			}
+		})
+	}
+}
+
+func TestAccountsAPI_ValidCountries(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceClientSideError bool
+		response             *http.Response
+		expected             []string
+		expectedError        error
+	}{
+		{
+			title: "account with no valid countries",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
+			},
+			expected: []string{},
+		},
+		{
+			title: "account with no valid countries and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: nil,
+		},
+		{
+			title: "account with some valid countries",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`["country"]`)),
+			},
+			expected: []string{"country"},
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceClientSideError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
+			client, err := New(
+				WithBaseURL("https://base.com"),
+				WithHTTPClient(httpClient),
+				WithAPIKey("api_key"),
+			)
+			if err != nil {
+				t.Errorf("Did not expect an error but received: '%v'", err)
+				checkErrorType(t, err, true)
+			}
+			httpClient.SetResponse(fetchValidCountriesPath, tC.response)
+			actual, err := client.Accounts().Countries()
+			if err != nil {
+				if !test.CheckError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceClientSideError)
 			}
 			if !reflect.DeepEqual(actual, tC.expected) {
 				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)

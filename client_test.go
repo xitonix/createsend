@@ -32,7 +32,9 @@ func TestNewClient(t *testing.T) {
 				createsend.WithAPIKey("api_key"),
 			)
 			if err != nil {
-				checkErrorType(t, err)
+				if _, ok := err.(*createsend.Error); !ok {
+					t.Errorf("We should have returned a custom createsend error")
+				}
 				return
 			}
 
