@@ -8,4 +8,6 @@ type API interface {
 	Billing() (*Billing, error)
 	// Countries returns a list of all the valid countries accepted as input when a country is required, typically when creating a client.
 	Countries() ([]string, error)
+	// Timezones returns a list of all the valid timezones accepted as input when a timezone is required, typically when creating a client.
+	Timezones() ([]string, error)
 }

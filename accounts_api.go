@@ -9,6 +9,7 @@ const (
 	listClientsPath         = "clients.json"
 	fetchBillingDetailsPath = "billingdetails.json"
 	fetchValidCountriesPath = "countries.json"
+	fetchValidTimezonesPath = "timezones.json"
 )
 
 type accountsAPI struct {
@@ -40,6 +41,15 @@ func (a *accountsAPI) Billing() (*accounts.Billing, error) {
 func (a *accountsAPI) Countries() ([]string, error) {
 	var result []string
 	err := a.client.Get(fetchValidCountriesPath, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (a *accountsAPI) Timezones() ([]string, error) {
+	var result []string
+	err := a.client.Get(fetchValidTimezonesPath, &result)
 	if err != nil {
 		return nil, err
 	}
