@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/xitonix/createsend/accounts"
 	"github.com/xitonix/createsend/internal/test"
@@ -309,6 +310,100 @@ func TestAccountsAPI_Timezones(t *testing.T) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
 				checkErrorType(t, err, !tC.forceClientSideError)
+			}
+			if !reflect.DeepEqual(actual, tC.expected) {
+				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			}
+		})
+	}
+}
+
+func TestAccountsAPI_Now(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expected             time.Time
+		expectedError        error
+		parsingError         bool
+	}{
+		{
+			title: "account without system time",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			expected: time.Time{},
+		},
+		{
+			title: "account without system time and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: time.Time{},
+		},
+		{
+			title: "account with empty system time",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"SystemDate":""}`)),
+			},
+			expected: time.Time{},
+		},
+		{
+			title: "account with parsable system time",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"SystemDate":"2020-06-12 16:19:00"}`)),
+			},
+			expected: time.Date(2020, 6, 12, 16, 19, 0, 0, time.UTC),
+		},
+		{
+			title: "account with none parsable system time",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"SystemDate":"01/12/2006T16:19:00"}`)),
+			},
+			expectedError: newClientError(ErrCodeParseServerResponse),
+			expected:      time.Time{},
+			parsingError:  true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceHTTPClientError))
+			client, err := New(
+				WithBaseURL("https://base.com"),
+				WithHTTPClient(httpClient),
+				WithAPIKey("api_key"),
+			)
+			if err != nil {
+				t.Errorf("Did not expect an error but received: '%v'", err)
+				checkErrorType(t, err, true)
+			}
+			httpClient.SetResponse(fetchCurrentDatePath, tC.response)
+			actual, err := client.Accounts().Now()
+			if err != nil {
+				if !test.CheckError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.parsingError && !tC.forceHTTPClientError)
 			}
 			if !reflect.DeepEqual(actual, tC.expected) {
 				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)

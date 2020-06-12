@@ -12,6 +12,7 @@ const (
 	ErrCodeInvalidURL           ClientErrorCode = -7
 	ErrCodeInvalidJson          ClientErrorCode = -8
 	ErrCodeInvalidRequestBody   ClientErrorCode = -9
+	ErrCodeParseServerResponse  ClientErrorCode = -10
 )
 
 func (c ClientErrorCode) String() string {
@@ -32,6 +33,8 @@ func (c ClientErrorCode) String() string {
 		return "invalid json data"
 	case ErrCodeInvalidRequestBody:
 		return "invalid request body"
+	case ErrCodeParseServerResponse:
+		return "invalid server data"
 	default:
 		return "Unknown client error"
 	}

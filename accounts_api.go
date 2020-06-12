@@ -1,6 +1,8 @@
 package createsend
 
 import (
+	"time"
+
 	"github.com/xitonix/createsend/accounts"
 	"github.com/xitonix/createsend/internal"
 )
@@ -10,6 +12,7 @@ const (
 	fetchBillingDetailsPath = "billingdetails.json"
 	fetchValidCountriesPath = "countries.json"
 	fetchValidTimezonesPath = "timezones.json"
+	fetchCurrentDatePath    = "systemdate.json"
 )
 
 type accountsAPI struct {
@@ -54,4 +57,23 @@ func (a *accountsAPI) Timezones() ([]string, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (a *accountsAPI) Now() (time.Time, error) {
+	var result *struct {
+		SystemDate string
+	}
+	err := a.client.Get(fetchCurrentDatePath, &result)
+	if err != nil {
+		return time.Time{}, err
+	}
+	if result != nil && len(result.SystemDate) > 0 {
+		t, err := time.Parse("2006-01-02 15:04:05", result.SystemDate)
+		if err != nil {
+			return time.Time{}, newWrappedClientError("Failed to parse the server date value", err, ErrCodeParseServerResponse)
+		}
+		return t, nil
+	}
+
+	return time.Time{}, nil
 }
