@@ -724,6 +724,221 @@ func TestPost(t *testing.T) {
 	}
 }
 
+func TestPut(t *testing.T) {
+	const base = "https://base"
+	type result struct {
+		Data string `json:"data"`
+	}
+
+	testCases := []struct {
+		title                       string
+		path                        string
+		response                    *http.Response
+		expectedResult              *result
+		body                        *bodyMock
+		expectedError               error
+		expectServerError           bool
+		forceRemoteCallToFail       bool
+		expectRemoteServerCallCount int
+	}{
+		{
+			title: "the server must always return a json payload when result is requested by client",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expectedError:               newClientError(ErrCodeInvalidJson),
+			expectedResult:              &result{},
+			expectRemoteServerCallCount: 1,
+		},
+		{
+			title: "decoding valid json response from the server should not fail",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"data":"d"}`)),
+			},
+			expectedError:               nil,
+			expectedResult:              &result{Data: "d"},
+			expectRemoteServerCallCount: 1,
+		},
+		{
+			title:                       "the client must report failure if the underlying http client failed",
+			path:                        "/path",
+			response:                    &http.Response{},
+			expectedError:               newClientError(ErrCodeUnknown),
+			expectedResult:              &result{},
+			forceRemoteCallToFail:       true,
+			expectRemoteServerCallCount: 1,
+		},
+		{
+			title: "the client must return a server error when the server returns a failure http status code",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
+			},
+			expectedError:               &Error{Code: 100},
+			expectedResult:              &result{},
+			expectServerError:           true,
+			expectRemoteServerCallCount: 1,
+		},
+		{
+			title: "response status code 300 is considered a server side error",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 300,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
+			},
+			expectedError:               &Error{Code: 100},
+			expectedResult:              &result{},
+			expectServerError:           true,
+			expectRemoteServerCallCount: 1,
+		},
+		{
+			title: "response status code greater than 300 is considered a server side error",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 301,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
+			},
+			expectedError:               &Error{Code: 100},
+			expectedResult:              &result{},
+			expectServerError:           true,
+			expectRemoteServerCallCount: 1,
+		},
+		{
+			title: "response status code less than 200 is considered a server side error",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 199,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":100}`)),
+			},
+			expectedError:               &Error{Code: 100},
+			expectedResult:              &result{},
+			expectServerError:           true,
+			expectRemoteServerCallCount: 1,
+		},
+		{
+			title: "response status code between 200 and 300 is considered a successful response",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 299,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"data":"d"}`)),
+			},
+			expectedError:               nil,
+			expectedResult:              &result{Data: "d"},
+			expectRemoteServerCallCount: 1,
+		},
+		{
+			title: "should fail to decode a server side error with invalid createsend error json content",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{I'm invalid Json'`)),
+			},
+			expectedError:               newClientError(ErrCodeInvalidJson),
+			expectedResult:              &result{},
+			expectRemoteServerCallCount: 1,
+		},
+		{
+			title: "none empty valid body should be marshalled into the request",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"data":"d"}`)),
+			},
+			expectedError:               nil,
+			body:                        newBodyMock(false),
+			expectedResult:              &result{Data: "d"},
+			expectRemoteServerCallCount: 1,
+		},
+		{
+			title: "request should not be sent to the server if encoding of request body failed",
+			path:  "/path",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"data":"d"}`)),
+			},
+			expectedError:               newClientError(ErrCodeInvalidRequestBody),
+			body:                        newBodyMock(true),
+			expectedResult:              &result{},
+			expectRemoteServerCallCount: 0,
+		},
+	}
+
+	method := http.MethodPut
+	expectedHeaderKeys := []string{
+		userAgentHeaderKey,
+		authenticationHeaderKey,
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+
+			fullURL := base + tC.path
+
+			onCall := func(request *http.Request) {
+				if request.Method != method {
+					t.Errorf("Expected HTTP Method: %s, Actual: %s", method, request.Method)
+				}
+
+				actualURL := request.URL.String()
+				if actualURL != fullURL {
+					t.Errorf("Expected URL: %s, Actual: %s", fullURL, actualURL)
+				}
+
+				if len(expectedHeaderKeys) != len(request.Header) {
+					t.Errorf("Expected Headers Count: %d, Actual: %d", len(expectedHeaderKeys), len(request.Header))
+				}
+
+				for _, key := range expectedHeaderKeys {
+					if _, ok := request.Header[key]; !ok {
+						t.Errorf("Expected Header [%s] was not found", key)
+					}
+				}
+
+				if tC.body != nil {
+					checkRequestBody(t, request.Body, tC.body)
+				}
+			}
+
+			httpClient := mock.NewHTTPClientMock(mock.WhenCalled(onCall), mock.ForceToFail(tC.forceRemoteCallToFail))
+			auth := &authentication{
+				token:  "api_key",
+				method: apiKeyAuthentication,
+			}
+
+			client, err := newHTTPClient(base, httpClient, auth)
+			if err != nil {
+				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
+			}
+
+			httpClient.SetResponse(tC.path, tC.response)
+
+			var actualResult result
+			err = client.Put(fullURL, &actualResult, tC.body)
+			if !test.CheckError(err, tC.expectedError) {
+				t.Errorf("Expected '%v' error, but received: '%v'", tC.expectedError, err)
+			}
+
+			if err != nil {
+				checkErrorType(t, err, tC.expectServerError)
+			}
+
+			if !reflect.DeepEqual(&actualResult, tC.expectedResult) {
+				t.Errorf("Expected result: %+v, actual: %+v", tC.expectedResult, actualResult)
+			}
+
+			count := httpClient.Count(tC.path)
+			if tC.expectRemoteServerCallCount != count {
+				t.Errorf("Expected number of calls to remote servers: %d, actual: %d", tC.expectRemoteServerCallCount, count)
+			}
+		})
+	}
+}
+
 func checkRequestBody(t *testing.T, actual io.ReadCloser, expected *bodyMock) {
 	t.Helper()
 	defer actual.Close()
