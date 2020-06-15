@@ -1,6 +1,8 @@
 package createsend
 
 import (
+	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/xitonix/createsend/accounts"
@@ -13,6 +15,7 @@ const (
 	fetchValidCountriesPath = "countries.json"
 	fetchValidTimezonesPath = "timezones.json"
 	fetchCurrentDatePath    = "systemdate.json"
+	administratorsPath      = "admins.json"
 )
 
 type accountsAPI struct {
@@ -76,4 +79,13 @@ func (a *accountsAPI) Now() (time.Time, error) {
 	}
 
 	return time.Time{}, nil
+}
+
+func (a *accountsAPI) AddAdministrator(administrator accounts.Administrator) error {
+	return a.client.Post(administratorsPath, nil, administrator)
+}
+
+func (a *accountsAPI) UpdateAdministrator(currentEmailAddress string, administrator accounts.Administrator) error {
+	path := fmt.Sprintf("%s?email=%s", administratorsPath, url.QueryEscape(currentEmailAddress))
+	return a.client.Put(path, nil, administrator)
 }

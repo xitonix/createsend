@@ -17,4 +17,13 @@ type API interface {
 	// This is useful when, for example, you are syncing your Campaign Monitor lists with an external list,
 	// allowing you to accurately determine the time on our server when you carry out the synchronization.
 	Now() (time.Time, error)
+	// AddAdministrator adds a new administrator to the account.
+	//
+	// An invitation will be sent to the new administrator via email.
+	AddAdministrator(administrator Administrator) error
+	// UpdateAdministrator updates the email address and/or name of an administrator.
+	//
+	// The first parameter is the email address of the admin whose details will be updated.
+	// This is regarded as the 'old' email address.
+	UpdateAdministrator(currentEmailAddress string, administrator Administrator) error
 }
