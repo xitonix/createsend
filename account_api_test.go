@@ -521,3 +521,165 @@ func TestAccountsAPI_UpdateAdministrator(t *testing.T) {
 		})
 	}
 }
+
+func TestAccountsAPI_Administrators(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceClientSideError bool
+		response             *http.Response
+		expected             []*accounts.AdministratorDetails
+		expectedError        error
+	}{
+		{
+			title: "account with no admins",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
+			},
+			expected: []*accounts.AdministratorDetails{},
+		},
+		{
+			title: "account with no admins and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: []*accounts.AdministratorDetails{},
+		},
+		{
+			title: "account with admins",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`[{"EmailAddress":"e@d.com", "Name":"name", "Status":"status"}]`)),
+			},
+			expected: []*accounts.AdministratorDetails{{
+				Administrator: accounts.Administrator{
+					EmailAddress: "e@d.com",
+					Name:         "name",
+				},
+				Status: "status",
+			}},
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceClientSideError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
+			client, err := New(
+				WithBaseURL("https://base.com"),
+				WithHTTPClient(httpClient),
+				WithAPIKey("api_key"),
+			)
+			if err != nil {
+				t.Errorf("Did not expect an error but received: '%v'", err)
+				checkErrorType(t, err, true)
+			}
+			httpClient.SetResponse(administratorsPath, tC.response)
+			actual, err := client.Accounts().Administrators()
+			if err != nil {
+				if !test.CheckError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceClientSideError)
+			}
+			if !reflect.DeepEqual(actual, tC.expected) {
+				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			}
+		})
+	}
+}
+
+func TestAccountsAPI_Administrator(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceClientSideError bool
+		response             *http.Response
+		expected             *accounts.AdministratorDetails
+		expectedError        error
+	}{
+		{
+			title: "account with no admin",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			expected: &accounts.AdministratorDetails{},
+		},
+		{
+			title: "account with no admins and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: nil,
+		},
+		{
+			title: "administrator found",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"EmailAddress":"e@d.com", "Name":"name", "Status":"status"}`)),
+			},
+			expected: &accounts.AdministratorDetails{
+				Administrator: accounts.Administrator{
+					EmailAddress: "e@d.com",
+					Name:         "name",
+				},
+				Status: "status",
+			},
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceClientSideError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
+			client, err := New(
+				WithBaseURL("https://base.com"),
+				WithHTTPClient(httpClient),
+				WithAPIKey("api_key"),
+			)
+			if err != nil {
+				t.Errorf("Did not expect an error but received: '%v'", err)
+				checkErrorType(t, err, true)
+			}
+			httpClient.SetResponse(administratorsPath, tC.response)
+			actual, err := client.Accounts().Administrator("e@d.com")
+			if err != nil {
+				if !test.CheckError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceClientSideError)
+			}
+			if !reflect.DeepEqual(actual, tC.expected) {
+				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			}
+		})
+	}
+}
