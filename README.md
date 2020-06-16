@@ -15,3 +15,40 @@ Campaign Monitor API wrapper in Go
 ```shell script
 go get github.com/xitonix/createsend
 ```
+
+## Example
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    "github.com/xitonix/createsend"
+)
+
+func main() {
+    client, err := createsend.New(createsend.WithAPIKey("[Your API Key]"))
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    clients, err := client.Accounts().Clients()
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    for _, client := range clients {
+        fmt.Printf("%s: %s\n", client.Id, client.Name)
+    }
+}
+```
+
+You can also use oAuth authentication token:
+
+```go
+client, err := createsend.New(createsend.WithOAuthToken("[OAuth Token]"))
+if err != nil {
+  log.Fatal(err)
+}
+```
