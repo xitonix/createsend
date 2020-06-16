@@ -2,7 +2,7 @@ package accounts
 
 import "time"
 
-// API represents
+// API is an interface that wraps account related operations.
 type API interface {
 	// Client returns a list of all the clients belong to the account.
 	Clients() ([]*Client, error)
@@ -36,4 +36,13 @@ type API interface {
 	//
 	// They will no longer be able to log into their account.
 	DeleteAdministrator(emailAddress string) error
+	// SetAsPrimaryContact sets the primary contact of the account to be the administrator with the specified email address.
+	SetAsPrimaryContact(emailAddress string) error
+	// GetPrimaryContact returns the email address of the administrator who is selected as the primary contact for the account.
+	GetPrimaryContact() (string, error)
+	// NewEmbeddedSession initiates a new login session for the member with the specified email address and returns the session URL.
+	//
+	// This method will return a single use URL which will create the login session.
+	// This is usually used as the source of an iframe for embedding Campaign Monitor within your own application.
+	NewEmbeddedSession(session EmbeddedSession) (string, error)
 }

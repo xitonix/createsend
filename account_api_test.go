@@ -44,8 +44,8 @@ func TestAccountsAPI_Clients(t *testing.T) {
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`[{"ClientID":"id", "Name":"name"}]`)),
 			},
 			expected: []*accounts.Client{{
-				ClientID: "id",
-				Name:     "name",
+				Id:   "id",
+				Name: "name",
 			}},
 		},
 		{
@@ -55,8 +55,8 @@ func TestAccountsAPI_Clients(t *testing.T) {
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`[{"ClientID":"id", "Name":"name"}]`)),
 			},
 			expected: []*accounts.Client{{
-				ClientID: "id",
-				Name:     "name",
+				Id:   "id",
+				Name: "name",
 			}},
 			oAuthAuthentication: true,
 		},
@@ -756,6 +756,227 @@ func TestAccountsAPI_DeleteAdministrator(t *testing.T) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
 				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+		})
+	}
+}
+
+func TestAccountsAPI_GetPrimaryContact(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expected             string
+		expectedError        error
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "account with no primary contact",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			expected: "",
+		},
+		{
+			title: "account with no primary contact and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: "",
+		},
+		{
+			title: "primary contact found",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"EmailAddress":"e@d.com"}`)),
+			},
+			expected: "e@d.com",
+		},
+		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"EmailAddress":"e@d.com"}`)),
+			},
+			expected:            "e@d.com",
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse(primaryContactPath, tC.response)
+			actual, err := client.Accounts().GetPrimaryContact()
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if !reflect.DeepEqual(actual, tC.expected) {
+				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			}
+		})
+	}
+}
+
+func TestAccountsAPI_SetAsPrimaryContact(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "successful execution",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"EmailAddress":"e@d.com"}`)),
+			},
+		},
+		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"EmailAddress":"e@d.com"}`)),
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse(primaryContactPath, tC.response)
+			err := client.Accounts().SetAsPrimaryContact("e@d.com")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+		})
+	}
+}
+
+func TestAccountsAPI_NewEmbeddedSession(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		input                accounts.EmbeddedSession
+		expected             string
+		expectedError        error
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "empty json object response",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			expected: "",
+		},
+		{
+			title: "empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: "",
+		},
+		{
+			title: "successful execution",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"SessionUrl":"session_url"}`)),
+			},
+			input: accounts.EmbeddedSession{
+				EmailAddress: "e@d.com",
+				Chrome:       "chrome",
+				URL:          "url",
+				IntegratorId: "integration_id",
+				ClientId:     "client_id",
+			},
+			expected: "session_url",
+		},
+		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"SessionUrl":"session_url"}`)),
+			},
+			input: accounts.EmbeddedSession{
+				EmailAddress: "e@d.com",
+				Chrome:       "chrome",
+				URL:          "url",
+				IntegratorId: "integration_id",
+				ClientId:     "client_id",
+			},
+			expected:            "session_url",
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse(externalSessionPath, tC.response)
+			actual, err := client.Accounts().NewEmbeddedSession(tC.input)
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if actual != tC.expected {
+				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
 			}
 		})
 	}

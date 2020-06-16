@@ -16,6 +16,8 @@ const (
 	fetchValidTimezonesPath = "timezones.json"
 	fetchCurrentDatePath    = "systemdate.json"
 	administratorsPath      = "admins.json"
+	primaryContactPath      = "primarycontact.json"
+	externalSessionPath     = "externalsession.json"
 )
 
 type accountsAPI struct {
@@ -112,4 +114,37 @@ func (a *accountsAPI) GetAdministrator(emailAddress string) (*accounts.Administr
 func (a *accountsAPI) DeleteAdministrator(emailAddress string) error {
 	path := fmt.Sprintf("%s?email=%s", administratorsPath, url.QueryEscape(emailAddress))
 	return a.client.Delete(path)
+}
+
+func (a *accountsAPI) SetAsPrimaryContact(emailAddress string) error {
+	path := fmt.Sprintf("%s?email=%s", primaryContactPath, url.QueryEscape(emailAddress))
+	return a.client.Put(path, nil, nil)
+}
+
+func (a *accountsAPI) GetPrimaryContact() (string, error) {
+	var result *struct {
+		EmailAddress string
+	}
+	err := a.client.Get(primaryContactPath, &result)
+	if err != nil {
+		return "", err
+	}
+	if result == nil {
+		return "", nil
+	}
+	return result.EmailAddress, nil
+}
+
+func (a *accountsAPI) NewEmbeddedSession(session accounts.EmbeddedSession) (string, error) {
+	var result *struct {
+		SessionUrl string
+	}
+	err := a.client.Put(externalSessionPath, &result, session)
+	if err != nil {
+		return "", err
+	}
+	if result == nil {
+		return "", nil
+	}
+	return result.SessionUrl, nil
 }
