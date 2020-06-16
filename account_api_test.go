@@ -9,17 +9,17 @@ import (
 	"time"
 
 	"github.com/xitonix/createsend/accounts"
-	"github.com/xitonix/createsend/internal/test"
 	"github.com/xitonix/createsend/mock"
 )
 
 func TestAccountsAPI_Clients(t *testing.T) {
 	testCases := []struct {
 		title                string
-		forceClientSideError bool
+		forceHTTPClientError bool
 		response             *http.Response
 		expected             []*accounts.Client
 		expectedError        error
+		oAuthAuthentication  bool
 	}{
 		{
 			title: "account with no clients",
@@ -49,9 +49,21 @@ func TestAccountsAPI_Clients(t *testing.T) {
 			}},
 		},
 		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`[{"ClientID":"id", "Name":"name"}]`)),
+			},
+			expected: []*accounts.Client{{
+				ClientID: "id",
+				Name:     "name",
+			}},
+			oAuthAuthentication: true,
+		},
+		{
 			title:                "simulate remote call failure",
 			response:             &http.Response{},
-			forceClientSideError: true,
+			forceHTTPClientError: true,
 			expectedError:        mock.ErrDeliberate,
 		},
 		{
@@ -66,23 +78,14 @@ func TestAccountsAPI_Clients(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
-			client, err := New(
-				WithBaseURL("https://base.com"),
-				WithHTTPClient(httpClient),
-				WithAPIKey("api_key"),
-			)
-			if err != nil {
-				t.Errorf("Did not expect an error but received: '%v'", err)
-				checkErrorType(t, err, true)
-			}
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(listClientsPath, tC.response)
 			actual, err := client.Accounts().Clients()
 			if err != nil {
-				if !test.CheckError(err, tC.expectedError) {
+				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err, !tC.forceClientSideError)
+				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
 			if !reflect.DeepEqual(actual, tC.expected) {
 				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
@@ -94,10 +97,11 @@ func TestAccountsAPI_Clients(t *testing.T) {
 func TestAccountsAPI_Billing(t *testing.T) {
 	testCases := []struct {
 		title                string
-		forceClientSideError bool
+		forceHTTPClientError bool
 		response             *http.Response
 		expected             *accounts.Billing
 		expectedError        error
+		oAuthAuthentication  bool
 	}{
 		{
 			title: "account with no billing details",
@@ -126,9 +130,20 @@ func TestAccountsAPI_Billing(t *testing.T) {
 			},
 		},
 		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Credits":100}`)),
+			},
+			expected: &accounts.Billing{
+				Credits: 100,
+			},
+			oAuthAuthentication: true,
+		},
+		{
 			title:                "simulate remote call failure",
 			response:             &http.Response{},
-			forceClientSideError: true,
+			forceHTTPClientError: true,
 			expectedError:        mock.ErrDeliberate,
 		},
 		{
@@ -143,23 +158,14 @@ func TestAccountsAPI_Billing(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
-			client, err := New(
-				WithBaseURL("https://base.com"),
-				WithHTTPClient(httpClient),
-				WithAPIKey("api_key"),
-			)
-			if err != nil {
-				t.Errorf("Did not expect an error but received: '%v'", err)
-				checkErrorType(t, err, true)
-			}
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(fetchBillingDetailsPath, tC.response)
 			actual, err := client.Accounts().Billing()
 			if err != nil {
-				if !test.CheckError(err, tC.expectedError) {
+				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err, !tC.forceClientSideError)
+				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
 			if !reflect.DeepEqual(actual, tC.expected) {
 				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
@@ -171,10 +177,11 @@ func TestAccountsAPI_Billing(t *testing.T) {
 func TestAccountsAPI_Countries(t *testing.T) {
 	testCases := []struct {
 		title                string
-		forceClientSideError bool
+		forceHTTPClientError bool
 		response             *http.Response
 		expected             []string
 		expectedError        error
+		oAuthAuthentication  bool
 	}{
 		{
 			title: "account with no valid countries",
@@ -201,9 +208,18 @@ func TestAccountsAPI_Countries(t *testing.T) {
 			expected: []string{"country"},
 		},
 		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`["country"]`)),
+			},
+			expected:            []string{"country"},
+			oAuthAuthentication: true,
+		},
+		{
 			title:                "simulate remote call failure",
 			response:             &http.Response{},
-			forceClientSideError: true,
+			forceHTTPClientError: true,
 			expectedError:        mock.ErrDeliberate,
 		},
 		{
@@ -218,23 +234,14 @@ func TestAccountsAPI_Countries(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
-			client, err := New(
-				WithBaseURL("https://base.com"),
-				WithHTTPClient(httpClient),
-				WithAPIKey("api_key"),
-			)
-			if err != nil {
-				t.Errorf("Did not expect an error but received: '%v'", err)
-				checkErrorType(t, err, true)
-			}
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(fetchValidCountriesPath, tC.response)
 			actual, err := client.Accounts().Countries()
 			if err != nil {
-				if !test.CheckError(err, tC.expectedError) {
+				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err, !tC.forceClientSideError)
+				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
 			if !reflect.DeepEqual(actual, tC.expected) {
 				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
@@ -246,10 +253,11 @@ func TestAccountsAPI_Countries(t *testing.T) {
 func TestAccountsAPI_Timezones(t *testing.T) {
 	testCases := []struct {
 		title                string
-		forceClientSideError bool
+		forceHTTPClientError bool
 		response             *http.Response
 		expected             []string
 		expectedError        error
+		oAuthAuthentication  bool
 	}{
 		{
 			title: "account with no timezones",
@@ -276,9 +284,18 @@ func TestAccountsAPI_Timezones(t *testing.T) {
 			expected: []string{"tz"},
 		},
 		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`["tz"]`)),
+			},
+			expected:            []string{"tz"},
+			oAuthAuthentication: true,
+		},
+		{
 			title:                "simulate remote call failure",
 			response:             &http.Response{},
-			forceClientSideError: true,
+			forceHTTPClientError: true,
 			expectedError:        mock.ErrDeliberate,
 		},
 		{
@@ -293,23 +310,14 @@ func TestAccountsAPI_Timezones(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
-			client, err := New(
-				WithBaseURL("https://base.com"),
-				WithHTTPClient(httpClient),
-				WithAPIKey("api_key"),
-			)
-			if err != nil {
-				t.Errorf("Did not expect an error but received: '%v'", err)
-				checkErrorType(t, err, true)
-			}
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(fetchValidTimezonesPath, tC.response)
 			actual, err := client.Accounts().Timezones()
 			if err != nil {
-				if !test.CheckError(err, tC.expectedError) {
+				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err, !tC.forceClientSideError)
+				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
 			if !reflect.DeepEqual(actual, tC.expected) {
 				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
@@ -326,6 +334,7 @@ func TestAccountsAPI_Now(t *testing.T) {
 		expected             time.Time
 		expectedError        error
 		parsingError         bool
+		oAuthAuthentication  bool
 	}{
 		{
 			title: "account without system time",
@@ -360,6 +369,15 @@ func TestAccountsAPI_Now(t *testing.T) {
 			expected: time.Date(2020, 6, 12, 16, 19, 0, 0, time.UTC),
 		},
 		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"SystemDate":"2020-06-12 16:19:00"}`)),
+			},
+			expected:            time.Date(2020, 6, 12, 16, 19, 0, 0, time.UTC),
+			oAuthAuthentication: true,
+		},
+		{
 			title: "account with none parsable system time",
 			response: &http.Response{
 				StatusCode: 200,
@@ -387,20 +405,11 @@ func TestAccountsAPI_Now(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceHTTPClientError))
-			client, err := New(
-				WithBaseURL("https://base.com"),
-				WithHTTPClient(httpClient),
-				WithAPIKey("api_key"),
-			)
-			if err != nil {
-				t.Errorf("Did not expect an error but received: '%v'", err)
-				checkErrorType(t, err, true)
-			}
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(fetchCurrentDatePath, tC.response)
 			actual, err := client.Accounts().Now()
 			if err != nil {
-				if !test.CheckError(err, tC.expectedError) {
+				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
 				checkErrorType(t, err, !tC.parsingError && !tC.forceHTTPClientError)
@@ -415,10 +424,11 @@ func TestAccountsAPI_Now(t *testing.T) {
 func TestAccountsAPI_AddAdministrator(t *testing.T) {
 	testCases := []struct {
 		title                string
-		forceClientSideError bool
+		forceHTTPClientError bool
 		response             *http.Response
 		expectedError        error
 		input                accounts.Administrator
+		oAuthAuthentication  bool
 	}{
 		{
 			title: "receiving 200 from the server means success",
@@ -428,9 +438,17 @@ func TestAccountsAPI_AddAdministrator(t *testing.T) {
 			},
 		},
 		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			oAuthAuthentication: true,
+		},
+		{
 			title:                "simulate remote call failure",
 			response:             &http.Response{},
-			forceClientSideError: true,
+			forceHTTPClientError: true,
 			expectedError:        mock.ErrDeliberate,
 		},
 		{
@@ -445,23 +463,14 @@ func TestAccountsAPI_AddAdministrator(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
-			client, err := New(
-				WithBaseURL("https://base.com"),
-				WithHTTPClient(httpClient),
-				WithAPIKey("api_key"),
-			)
-			if err != nil {
-				t.Errorf("Did not expect an error but received: '%v'", err)
-				checkErrorType(t, err, true)
-			}
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(administratorsPath, tC.response)
-			err = client.Accounts().AddAdministrator(tC.input)
+			err := client.Accounts().AddAdministrator(tC.input)
 			if err != nil {
-				if !test.CheckError(err, tC.expectedError) {
+				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err, !tC.forceClientSideError)
+				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
 		})
 	}
@@ -470,10 +479,11 @@ func TestAccountsAPI_AddAdministrator(t *testing.T) {
 func TestAccountsAPI_UpdateAdministrator(t *testing.T) {
 	testCases := []struct {
 		title                string
-		forceClientSideError bool
+		forceHTTPClientError bool
 		response             *http.Response
 		expectedError        error
 		input                accounts.Administrator
+		oAuthAuthentication  bool
 	}{
 		{
 			title: "receiving 200 from the server means success",
@@ -483,9 +493,17 @@ func TestAccountsAPI_UpdateAdministrator(t *testing.T) {
 			},
 		},
 		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			oAuthAuthentication: true,
+		},
+		{
 			title:                "simulate remote call failure",
 			response:             &http.Response{},
-			forceClientSideError: true,
+			forceHTTPClientError: true,
 			expectedError:        mock.ErrDeliberate,
 		},
 		{
@@ -500,35 +518,27 @@ func TestAccountsAPI_UpdateAdministrator(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
-			client, err := New(
-				WithBaseURL("https://base.com"),
-				WithHTTPClient(httpClient),
-				WithAPIKey("api_key"),
-			)
-			if err != nil {
-				t.Errorf("Did not expect an error but received: '%v'", err)
-				checkErrorType(t, err, true)
-			}
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(administratorsPath, tC.response)
-			err = client.Accounts().UpdateAdministrator("old+email@address.com", tC.input)
+			err := client.Accounts().UpdateAdministrator("old+email@address.com", tC.input)
 			if err != nil {
-				if !test.CheckError(err, tC.expectedError) {
+				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err, !tC.forceClientSideError)
+				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
 		})
 	}
 }
 
-func TestAccountsAPI_Administrators(t *testing.T) {
+func TestAccountsAPI_GetAdministrators(t *testing.T) {
 	testCases := []struct {
 		title                string
-		forceClientSideError bool
+		forceHTTPClientError bool
 		response             *http.Response
 		expected             []*accounts.AdministratorDetails
 		expectedError        error
+		oAuthAuthentication  bool
 	}{
 		{
 			title: "account with no admins",
@@ -561,9 +571,24 @@ func TestAccountsAPI_Administrators(t *testing.T) {
 			}},
 		},
 		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`[{"EmailAddress":"e@d.com", "Name":"name", "Status":"status"}]`)),
+			},
+			expected: []*accounts.AdministratorDetails{{
+				Administrator: accounts.Administrator{
+					EmailAddress: "e@d.com",
+					Name:         "name",
+				},
+				Status: "status",
+			}},
+			oAuthAuthentication: true,
+		},
+		{
 			title:                "simulate remote call failure",
 			response:             &http.Response{},
-			forceClientSideError: true,
+			forceHTTPClientError: true,
 			expectedError:        mock.ErrDeliberate,
 		},
 		{
@@ -578,23 +603,14 @@ func TestAccountsAPI_Administrators(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
-			client, err := New(
-				WithBaseURL("https://base.com"),
-				WithHTTPClient(httpClient),
-				WithAPIKey("api_key"),
-			)
-			if err != nil {
-				t.Errorf("Did not expect an error but received: '%v'", err)
-				checkErrorType(t, err, true)
-			}
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(administratorsPath, tC.response)
-			actual, err := client.Accounts().Administrators()
+			actual, err := client.Accounts().GetAdministrators()
 			if err != nil {
-				if !test.CheckError(err, tC.expectedError) {
+				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err, !tC.forceClientSideError)
+				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
 			if !reflect.DeepEqual(actual, tC.expected) {
 				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
@@ -603,13 +619,14 @@ func TestAccountsAPI_Administrators(t *testing.T) {
 	}
 }
 
-func TestAccountsAPI_Administrator(t *testing.T) {
+func TestAccountsAPI_GetAdministrator(t *testing.T) {
 	testCases := []struct {
 		title                string
-		forceClientSideError bool
+		forceHTTPClientError bool
 		response             *http.Response
 		expected             *accounts.AdministratorDetails
 		expectedError        error
+		oAuthAuthentication  bool
 	}{
 		{
 			title: "account with no admin",
@@ -642,9 +659,24 @@ func TestAccountsAPI_Administrator(t *testing.T) {
 			},
 		},
 		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"EmailAddress":"e@d.com", "Name":"name", "Status":"status"}`)),
+			},
+			expected: &accounts.AdministratorDetails{
+				Administrator: accounts.Administrator{
+					EmailAddress: "e@d.com",
+					Name:         "name",
+				},
+				Status: "status",
+			},
+			oAuthAuthentication: true,
+		},
+		{
 			title:                "simulate remote call failure",
 			response:             &http.Response{},
-			forceClientSideError: true,
+			forceHTTPClientError: true,
 			expectedError:        mock.ErrDeliberate,
 		},
 		{
@@ -659,26 +691,71 @@ func TestAccountsAPI_Administrator(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			httpClient := mock.NewHTTPClientMock(mock.ForceToFail(tC.forceClientSideError))
-			client, err := New(
-				WithBaseURL("https://base.com"),
-				WithHTTPClient(httpClient),
-				WithAPIKey("api_key"),
-			)
-			if err != nil {
-				t.Errorf("Did not expect an error but received: '%v'", err)
-				checkErrorType(t, err, true)
-			}
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(administratorsPath, tC.response)
-			actual, err := client.Accounts().Administrator("e@d.com")
+			actual, err := client.Accounts().GetAdministrator("e@d.com")
 			if err != nil {
-				if !test.CheckError(err, tC.expectedError) {
+				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err, !tC.forceClientSideError)
+				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
 			if !reflect.DeepEqual(actual, tC.expected) {
 				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			}
+		})
+	}
+}
+
+func TestAccountsAPI_DeleteAdministrator(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "successful deletion",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+		},
+		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse(administratorsPath, tC.response)
+			err := client.Accounts().DeleteAdministrator("e@d.com")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
 		})
 	}

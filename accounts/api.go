@@ -26,10 +26,14 @@ type API interface {
 	// The first parameter is the email address of the admin whose details will be updated.
 	// This is regarded as the 'old' email address.
 	UpdateAdministrator(currentEmailAddress string, administrator Administrator) error
-	// Administrators returns a list of all (active or invited) administrators associated with the account.
-	Administrators() ([]*AdministratorDetails, error)
-	// Administrator returns the details of a single administrator associated with the account.
+	// GetAdministrators returns a list of all (active or invited) administrators associated with the account.
+	GetAdministrators() ([]*AdministratorDetails, error)
+	// GetAdministrator returns the details of a single administrator associated with the account.
 	//
 	// The parameter is the email address of the administrator whose information should be retrieved.
-	Administrator(emailAddress string) (*AdministratorDetails, error)
+	GetAdministrator(emailAddress string) (*AdministratorDetails, error)
+	// DeleteAdministrator changes the status of an active administrator, defined by the email address, to deleted.
+	//
+	// They will no longer be able to log into their account.
+	DeleteAdministrator(emailAddress string) error
 }

@@ -2,15 +2,11 @@ package createsend
 
 import (
 	"bytes"
-	"encoding/json"
-	"errors"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"testing"
 
-	"github.com/xitonix/createsend/internal/test"
 	"github.com/xitonix/createsend/mock"
 )
 
@@ -249,7 +245,7 @@ func TestNewHTTPClient(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
 			_, err := newHTTPClient(tC.baseURL, tC.client, tC.auth)
-			if !test.CheckError(err, tC.expectedError) {
+			if !checkError(err, tC.expectedError) {
 				t.Errorf("Client Creation: Expected '%v' error, but received: '%v'", tC.expectedError, err)
 			}
 			if err != nil {
@@ -315,7 +311,7 @@ func TestNewRequest(t *testing.T) {
 			}
 
 			actual, err := client.newRequest(tC.method, tC.path, tC.body)
-			if !test.CheckError(err, tC.expectedError) {
+			if !checkError(err, tC.expectedError) {
 				t.Errorf("Expected '%v' error, but received: '%v'", tC.expectedError, err)
 			}
 
@@ -400,7 +396,7 @@ func TestGetFullURL(t *testing.T) {
 			}
 
 			actual, err := client.getFullURL(tC.path)
-			if !test.CheckError(err, tC.expectedError) {
+			if !checkError(err, tC.expectedError) {
 				t.Errorf("Get Full URL: Expected '%v' error, but received: '%v'", tC.expectedError, err)
 			}
 
@@ -580,7 +576,7 @@ func TestGet(t *testing.T) {
 
 			var actualResult result
 			err = client.Get(fullURL, &actualResult)
-			if !test.CheckError(err, tC.expectedError) {
+			if !checkError(err, tC.expectedError) {
 				t.Errorf("Expected '%v' error, but received: '%v'", tC.expectedError, err)
 			}
 
@@ -806,7 +802,7 @@ func TestPost(t *testing.T) {
 
 			var actualResult result
 			err = client.Post(fullURL, &actualResult, tC.body)
-			if !test.CheckError(err, tC.expectedError) {
+			if !checkError(err, tC.expectedError) {
 				t.Errorf("Expected '%v' error, but received: '%v'", tC.expectedError, err)
 			}
 
@@ -1032,7 +1028,7 @@ func TestPut(t *testing.T) {
 
 			var actualResult result
 			err = client.Put(fullURL, &actualResult, tC.body)
-			if !test.CheckError(err, tC.expectedError) {
+			if !checkError(err, tC.expectedError) {
 				t.Errorf("Expected '%v' error, but received: '%v'", tC.expectedError, err)
 			}
 
@@ -1175,7 +1171,7 @@ func TestDelete(t *testing.T) {
 			httpClient.SetResponse(tC.path, tC.response)
 
 			err = client.Delete(fullURL)
-			if !test.CheckError(err, tC.expectedError) {
+			if !checkError(err, tC.expectedError) {
 				t.Errorf("Expected '%v' error, but received: '%v'", tC.expectedError, err)
 			}
 
@@ -1188,41 +1184,5 @@ func TestDelete(t *testing.T) {
 				t.Errorf("Expected number of calls: 1, actual: %d", count)
 			}
 		})
-	}
-}
-
-func checkRequestBody(t *testing.T, actual io.ReadCloser, expected *bodyMock) {
-	t.Helper()
-	defer actual.Close()
-	b, err := ioutil.ReadAll(actual)
-	if err != nil {
-		t.Errorf("Did not expect an error but received: '%v'", err)
-	}
-	var body bodyMock
-	err = json.Unmarshal(b, &body)
-	if err != nil {
-		t.Errorf("Did not expect an error but received: '%v'", err)
-	}
-
-	if expected == nil {
-		if len(b) > 0 {
-			t.Errorf("The request body should have been empty")
-		}
-		return
-	}
-	if expected.Value != body.Value {
-		t.Errorf("Expected Request Body Value: %s, Actual: %s", expected.Value, body.Value)
-	}
-}
-
-func checkErrorType(t *testing.T, err error, expectServerError bool) {
-	t.Helper()
-	var csErr *Error
-	ok := errors.As(err, &csErr)
-	if !ok {
-		t.Error("We should always return a custom createsend Error type")
-	}
-	if csErr.IsFromServer() != expectServerError {
-		t.Errorf("Expected server error: %v, actual: %v", expectServerError, csErr.IsFromServer())
 	}
 }

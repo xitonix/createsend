@@ -90,7 +90,7 @@ func (a *accountsAPI) UpdateAdministrator(currentEmailAddress string, administra
 	return a.client.Put(path, nil, administrator)
 }
 
-func (a *accountsAPI) Administrators() ([]*accounts.AdministratorDetails, error) {
+func (a *accountsAPI) GetAdministrators() ([]*accounts.AdministratorDetails, error) {
 	result := make([]*accounts.AdministratorDetails, 0)
 	err := a.client.Get(administratorsPath, &result)
 	if err != nil {
@@ -99,7 +99,7 @@ func (a *accountsAPI) Administrators() ([]*accounts.AdministratorDetails, error)
 	return result, nil
 }
 
-func (a *accountsAPI) Administrator(emailAddress string) (*accounts.AdministratorDetails, error) {
+func (a *accountsAPI) GetAdministrator(emailAddress string) (*accounts.AdministratorDetails, error) {
 	var result *accounts.AdministratorDetails
 	path := fmt.Sprintf("%s?email=%s", administratorsPath, url.QueryEscape(emailAddress))
 	err := a.client.Get(path, &result)
@@ -107,4 +107,9 @@ func (a *accountsAPI) Administrator(emailAddress string) (*accounts.Administrato
 		return nil, err
 	}
 	return result, nil
+}
+
+func (a *accountsAPI) DeleteAdministrator(emailAddress string) error {
+	path := fmt.Sprintf("%s?email=%s", administratorsPath, url.QueryEscape(emailAddress))
+	return a.client.Delete(path)
 }
