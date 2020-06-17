@@ -39,7 +39,11 @@ func TestNewClient(t *testing.T) {
 			}
 
 			if client.Accounts() == nil {
-				t.Errorf("Account API should not be nil")
+				t.Errorf("Accounts API should not be nil")
+			}
+
+			if client.Clients() == nil {
+				t.Errorf("Clients API should not be nil")
 			}
 		})
 	}

@@ -3,6 +3,10 @@ package accounts
 import "time"
 
 // API is an interface that wraps account related operations.
+//
+// The API gives you access to core account information such as the clients available in your account and helper
+// procedures when creating a client including available countries, time zones, the current date and
+// time in your account etc.
 type API interface {
 	// Client returns a list of all the clients belong to the account.
 	Clients() ([]*Client, error)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/xitonix/createsend/accounts"
+	"github.com/xitonix/createsend/clients"
 )
 
 const (
@@ -19,6 +20,7 @@ type Options struct {
 	auth     *authentication
 	baseURL  string
 	accounts accounts.API
+	clients  clients.API
 }
 
 func defaultOptions() *Options {
@@ -30,6 +32,12 @@ func defaultOptions() *Options {
 		client: &http.Client{
 			Timeout: 5 * time.Second,
 		},
+	}
+}
+
+func WithClientsAPI(api clients.API) Option {
+	return func(options *Options) {
+		options.clients = api
 	}
 }
 
