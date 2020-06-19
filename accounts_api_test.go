@@ -117,7 +117,7 @@ func TestAccountsAPI_Billing(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
-			expected: nil,
+			expected: &accounts.Billing{},
 		},
 		{
 			title: "account with billing details",
@@ -197,7 +197,7 @@ func TestAccountsAPI_Countries(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
-			expected: nil,
+			expected: []string{},
 		},
 		{
 			title: "account with some valid countries",
@@ -273,7 +273,7 @@ func TestAccountsAPI_Timezones(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
-			expected: nil,
+			expected: []string{},
 		},
 		{
 			title: "account with some valid timezones",
@@ -642,7 +642,7 @@ func TestAccountsAPI_GetAdministrator(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
-			expected: nil,
+			expected: &accounts.AdministratorDetails{},
 		},
 		{
 			title: "administrator found",

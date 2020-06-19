@@ -38,7 +38,7 @@ func (a *accountsAPI) Clients() ([]*accounts.Client, error) {
 }
 
 func (a *accountsAPI) Billing() (*accounts.Billing, error) {
-	var result *accounts.Billing
+	result := &accounts.Billing{}
 	err := a.client.Get(fetchBillingDetailsPath, &result)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (a *accountsAPI) Billing() (*accounts.Billing, error) {
 }
 
 func (a *accountsAPI) Countries() ([]string, error) {
-	var result []string
+	result := make([]string, 0)
 	err := a.client.Get(fetchValidCountriesPath, &result)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (a *accountsAPI) Countries() ([]string, error) {
 }
 
 func (a *accountsAPI) Timezones() ([]string, error) {
-	var result []string
+	result := make([]string, 0)
 	err := a.client.Get(fetchValidTimezonesPath, &result)
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (a *accountsAPI) GetAdministrators() ([]*accounts.AdministratorDetails, err
 }
 
 func (a *accountsAPI) GetAdministrator(emailAddress string) (*accounts.AdministratorDetails, error) {
-	var result *accounts.AdministratorDetails
+	result := &accounts.AdministratorDetails{}
 	path := fmt.Sprintf("%s?email=%s", administratorsPath, url.QueryEscape(emailAddress))
 	err := a.client.Get(path, &result)
 	if err != nil {
@@ -122,29 +122,23 @@ func (a *accountsAPI) SetAsPrimaryContact(emailAddress string) error {
 }
 
 func (a *accountsAPI) GetPrimaryContact() (string, error) {
-	var result *struct {
+	result := new(struct {
 		EmailAddress string
-	}
+	})
 	err := a.client.Get(primaryContactPath, &result)
 	if err != nil {
 		return "", err
-	}
-	if result == nil {
-		return "", nil
 	}
 	return result.EmailAddress, nil
 }
 
 func (a *accountsAPI) NewEmbeddedSession(session accounts.EmbeddedSession) (string, error) {
-	var result *struct {
+	result := new(struct {
 		SessionUrl string
-	}
+	})
 	err := a.client.Put(externalSessionPath, &result, session)
 	if err != nil {
 		return "", err
-	}
-	if result == nil {
-		return "", nil
 	}
 	return result.SessionUrl, nil
 }

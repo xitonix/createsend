@@ -29,30 +29,54 @@ func (a *clientsAPI) Create(client clients.Client) (string, error) {
 
 func (a *clientsAPI) Get(clientId string) (*clients.ClientDetails, error) {
 	path := fmt.Sprintf("clients/%s.json", url.QueryEscape(clientId))
-	var result *struct {
+
+	result := new(struct {
 		ApiKey       string
 		BasicDetails struct {
-			ClientID            string
-			CompanyName         string
-			Country             string
-			TimeZone            string
-			PrimaryContactName  string
-			PrimaryContactEmail string
+			ClientID     string
+			CompanyName  string
+			Country      string
+			TimeZone     string
+			EmailAddress string
+			ContactName  string
 		}
-		BillingDetails clients.BillingDetails
-	}
+		AccessDetails *struct {
+			AccessLevel int
+			Username    string
+		}
+		BillingDetails        *internal.BillingDetails
+		PendingBillingDetails *internal.BillingDetails
+	})
 	err := a.client.Get(path, &result)
 	if err != nil {
 		return nil, err
 	}
-	return &clients.ClientDetails{
-		ApiKey:              result.ApiKey,
-		Id:                  result.BasicDetails.ClientID,
-		Company:             result.BasicDetails.CompanyName,
-		Country:             result.BasicDetails.Country,
-		Timezone:            result.BasicDetails.TimeZone,
-		PrimaryContactName:  result.BasicDetails.PrimaryContactName,
-		PrimaryContactEmail: result.BasicDetails.PrimaryContactEmail,
-		Billing:             result.BillingDetails,
-	}, nil
+
+	clientDetails := &clients.ClientDetails{
+		APIKey:   result.ApiKey,
+		Id:       result.BasicDetails.ClientID,
+		Company:  result.BasicDetails.CompanyName,
+		Country:  result.BasicDetails.Country,
+		Timezone: result.BasicDetails.TimeZone,
+		Billing:  result.BillingDetails.ToClientBillingDetails(result.PendingBillingDetails),
+	}
+
+	if result.BasicDetails.ContactName != "" || result.BasicDetails.EmailAddress != "" {
+		clientDetails.Contact = &clients.ContactDetails{
+			Name:         result.BasicDetails.ContactName,
+			EmailAddress: result.BasicDetails.EmailAddress,
+			AccessLevel:  -1,
+			Username:     "",
+		}
+	}
+
+	if result.AccessDetails != nil {
+		if clientDetails.Contact == nil {
+			clientDetails.Contact = &clients.ContactDetails{}
+		}
+		clientDetails.Contact.AccessLevel = result.AccessDetails.AccessLevel
+		clientDetails.Contact.Username = result.AccessDetails.Username
+	}
+
+	return clientDetails, nil
 }
