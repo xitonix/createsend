@@ -12,4 +12,6 @@ type API interface {
 	Create(client Client) (string, error)
 	// Get returns the complete details for a client including their API key, access level, contact details and billing settings.
 	Get(clientId string) (*ClientDetails, error)
+	// SentCampaign returns a list of all sent campaigns for a client.
+	SentCampaigns(clientId string) ([]*SentCampaign, error)
 }

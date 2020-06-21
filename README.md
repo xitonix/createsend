@@ -22,9 +22,12 @@ go get github.com/xitonix/createsend
 package main
 
 import (
-    "fmt"
-    "log"
-    "github.com/xitonix/createsend"
+"fmt"
+"log"
+
+
+
+"github.com/xitonix/createsend"
 )
 
 func main() {

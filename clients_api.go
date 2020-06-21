@@ -80,3 +80,17 @@ func (a *clientsAPI) Get(clientId string) (*clients.ClientDetails, error) {
 
 	return clientDetails, nil
 }
+
+func (a *clientsAPI) SentCampaigns(clientId string) ([]*clients.SentCampaign, error) {
+	result := make([]*internal.SentCampaign, 0)
+	path := fmt.Sprintf("clients/%s/campaigns.json", url.QueryEscape(clientId))
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return nil, err
+	}
+	campaigns := make([]*clients.SentCampaign, len(result))
+	for i, c := range result {
+		campaigns[i] = c.ToSendCampaign()
+	}
+	return campaigns, nil
+}

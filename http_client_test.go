@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/xitonix/createsend/mock"
 )
@@ -584,8 +585,8 @@ func TestGet(t *testing.T) {
 				checkErrorType(t, err, tC.expectServerError)
 			}
 
-			if !reflect.DeepEqual(&actualResult, tC.expectedResult) {
-				t.Errorf("Expected result: %+v, actual: %+v", tC.expectedResult, actualResult)
+			if diff := cmp.Diff(tC.expectedResult, &actualResult); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}
 
 			count := httpClient.Count(tC.path)
@@ -810,8 +811,8 @@ func TestPost(t *testing.T) {
 				checkErrorType(t, err, tC.expectServerError)
 			}
 
-			if !reflect.DeepEqual(&actualResult, tC.expectedResult) {
-				t.Errorf("Expected result: %+v, actual: %+v", tC.expectedResult, actualResult)
+			if diff := cmp.Diff(tC.expectedResult, &actualResult); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}
 
 			count := httpClient.Count(tC.path)
@@ -1036,8 +1037,8 @@ func TestPut(t *testing.T) {
 				checkErrorType(t, err, tC.expectServerError)
 			}
 
-			if !reflect.DeepEqual(&actualResult, tC.expectedResult) {
-				t.Errorf("Expected result: %+v, actual: %+v", tC.expectedResult, actualResult)
+			if diff := cmp.Diff(tC.expectedResult, &actualResult); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}
 
 			count := httpClient.Count(tC.path)

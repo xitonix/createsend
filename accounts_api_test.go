@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/xitonix/createsend/accounts"
 	"github.com/xitonix/createsend/mock"
@@ -87,8 +88,8 @@ func TestAccountsAPI_Clients(t *testing.T) {
 				}
 				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
-			if !reflect.DeepEqual(actual, tC.expected) {
-				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}
 		})
 	}
@@ -167,8 +168,8 @@ func TestAccountsAPI_Billing(t *testing.T) {
 				}
 				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
-			if !reflect.DeepEqual(actual, tC.expected) {
-				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}
 		})
 	}
@@ -243,8 +244,8 @@ func TestAccountsAPI_Countries(t *testing.T) {
 				}
 				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
-			if !reflect.DeepEqual(actual, tC.expected) {
-				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}
 		})
 	}
@@ -319,8 +320,8 @@ func TestAccountsAPI_Timezones(t *testing.T) {
 				}
 				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
-			if !reflect.DeepEqual(actual, tC.expected) {
-				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}
 		})
 	}
@@ -414,8 +415,8 @@ func TestAccountsAPI_Now(t *testing.T) {
 				}
 				checkErrorType(t, err, !tC.parsingError && !tC.forceHTTPClientError)
 			}
-			if !reflect.DeepEqual(actual, tC.expected) {
-				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}
 		})
 	}
@@ -612,8 +613,8 @@ func TestAccountsAPI_Administrators(t *testing.T) {
 				}
 				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
-			if !reflect.DeepEqual(actual, tC.expected) {
-				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}
 		})
 	}
@@ -700,8 +701,8 @@ func TestAccountsAPI_Administrator(t *testing.T) {
 				}
 				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
-			if !reflect.DeepEqual(actual, tC.expected) {
-				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}
 		})
 	}
@@ -830,8 +831,8 @@ func TestAccountsAPI_PrimaryContact(t *testing.T) {
 				}
 				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
-			if !reflect.DeepEqual(actual, tC.expected) {
-				t.Errorf("Expected '%+v', actual: '%+v'", tC.expected, actual)
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}
 		})
 	}
