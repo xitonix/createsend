@@ -531,7 +531,7 @@ func TestAccountsAPI_UpdateAdministrator(t *testing.T) {
 	}
 }
 
-func TestAccountsAPI_GetAdministrators(t *testing.T) {
+func TestAccountsAPI_Administrators(t *testing.T) {
 	testCases := []struct {
 		title                string
 		forceHTTPClientError bool
@@ -605,7 +605,7 @@ func TestAccountsAPI_GetAdministrators(t *testing.T) {
 		t.Run(tC.title, func(t *testing.T) {
 			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(administratorsPath, tC.response)
-			actual, err := client.Accounts().GetAdministrators()
+			actual, err := client.Accounts().Administrators()
 			if err != nil {
 				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
@@ -619,7 +619,7 @@ func TestAccountsAPI_GetAdministrators(t *testing.T) {
 	}
 }
 
-func TestAccountsAPI_GetAdministrator(t *testing.T) {
+func TestAccountsAPI_Administrator(t *testing.T) {
 	testCases := []struct {
 		title                string
 		forceHTTPClientError bool
@@ -693,7 +693,7 @@ func TestAccountsAPI_GetAdministrator(t *testing.T) {
 		t.Run(tC.title, func(t *testing.T) {
 			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(administratorsPath, tC.response)
-			actual, err := client.Accounts().GetAdministrator("e@d.com")
+			actual, err := client.Accounts().Administrator("e@d.com")
 			if err != nil {
 				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
@@ -761,7 +761,7 @@ func TestAccountsAPI_DeleteAdministrator(t *testing.T) {
 	}
 }
 
-func TestAccountsAPI_GetPrimaryContact(t *testing.T) {
+func TestAccountsAPI_PrimaryContact(t *testing.T) {
 	testCases := []struct {
 		title                string
 		forceHTTPClientError bool
@@ -823,7 +823,7 @@ func TestAccountsAPI_GetPrimaryContact(t *testing.T) {
 		t.Run(tC.title, func(t *testing.T) {
 			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(primaryContactPath, tC.response)
-			actual, err := client.Accounts().GetPrimaryContact()
+			actual, err := client.Accounts().PrimaryContact()
 			if err != nil {
 				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)

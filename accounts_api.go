@@ -92,7 +92,7 @@ func (a *accountsAPI) UpdateAdministrator(currentEmailAddress string, administra
 	return a.client.Put(path, nil, administrator)
 }
 
-func (a *accountsAPI) GetAdministrators() ([]*accounts.AdministratorDetails, error) {
+func (a *accountsAPI) Administrators() ([]*accounts.AdministratorDetails, error) {
 	result := make([]*accounts.AdministratorDetails, 0)
 	err := a.client.Get(administratorsPath, &result)
 	if err != nil {
@@ -101,7 +101,7 @@ func (a *accountsAPI) GetAdministrators() ([]*accounts.AdministratorDetails, err
 	return result, nil
 }
 
-func (a *accountsAPI) GetAdministrator(emailAddress string) (*accounts.AdministratorDetails, error) {
+func (a *accountsAPI) Administrator(emailAddress string) (*accounts.AdministratorDetails, error) {
 	result := &accounts.AdministratorDetails{}
 	path := fmt.Sprintf("%s?email=%s", administratorsPath, url.QueryEscape(emailAddress))
 	err := a.client.Get(path, &result)
@@ -121,7 +121,7 @@ func (a *accountsAPI) SetAsPrimaryContact(emailAddress string) error {
 	return a.client.Put(path, nil, nil)
 }
 
-func (a *accountsAPI) GetPrimaryContact() (string, error) {
+func (a *accountsAPI) PrimaryContact() (string, error) {
 	result := new(struct {
 		EmailAddress string
 	})
