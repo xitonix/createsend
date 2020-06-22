@@ -14,4 +14,6 @@ type API interface {
 	Get(clientId string) (*ClientDetails, error)
 	// SentCampaign returns a list of all sent campaigns for a client.
 	SentCampaigns(clientId string) ([]*SentCampaign, error)
+	// ScheduledCampaigns returns all currently scheduled campaigns for a client.
+	ScheduledCampaigns(clientId string) ([]*ScheduledCampaign, error)
 }

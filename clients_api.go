@@ -94,3 +94,17 @@ func (a *clientsAPI) SentCampaigns(clientId string) ([]*clients.SentCampaign, er
 	}
 	return campaigns, nil
 }
+
+func (a *clientsAPI) ScheduledCampaigns(clientId string) ([]*clients.ScheduledCampaign, error) {
+	result := make([]*internal.ScheduledCampaign, 0)
+	path := fmt.Sprintf("clients/%s/scheduled.json", url.QueryEscape(clientId))
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return nil, err
+	}
+	campaigns := make([]*clients.ScheduledCampaign, len(result))
+	for i, c := range result {
+		campaigns[i] = c.ToScheduledCampaign()
+	}
+	return campaigns, nil
+}

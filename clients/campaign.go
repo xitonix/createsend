@@ -31,3 +31,15 @@ type SentCampaign struct {
 	// Recipients number of recipients the Campaign was sent to.
 	Recipients int64
 }
+
+// ScheduledCampaign represents a scheduled Campaign.
+type ScheduledCampaign struct {
+	// Campaign Campaign's basic details.
+	Campaign
+	// DateCreated the timestamp when the Campaign was created.
+	DateCreated string
+	// DateScheduled the timestamp when the Campaign will be sent.
+	DateScheduled string
+	// Timezone schedule timezone.
+	Timezone string
+}
