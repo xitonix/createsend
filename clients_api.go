@@ -90,7 +90,11 @@ func (a *clientsAPI) SentCampaigns(clientId string) ([]*clients.SentCampaign, er
 	}
 	campaigns := make([]*clients.SentCampaign, len(result))
 	for i, c := range result {
-		campaigns[i] = c.ToSendCampaign()
+		cm, err := c.ToSendCampaign()
+		if err != nil {
+			return nil, newClientError(ErrCodeDataProcessing)
+		}
+		campaigns[i] = cm
 	}
 	return campaigns, nil
 }
@@ -104,7 +108,29 @@ func (a *clientsAPI) ScheduledCampaigns(clientId string) ([]*clients.ScheduledCa
 	}
 	campaigns := make([]*clients.ScheduledCampaign, len(result))
 	for i, c := range result {
-		campaigns[i] = c.ToScheduledCampaign()
+		cm, err := c.ToScheduledCampaign()
+		if err != nil {
+			return nil, newClientError(ErrCodeDataProcessing)
+		}
+		campaigns[i] = cm
+	}
+	return campaigns, nil
+}
+
+func (a *clientsAPI) DraftCampaigns(clientId string) ([]*clients.DraftCampaign, error) {
+	result := make([]*internal.DraftCampaign, 0)
+	path := fmt.Sprintf("clients/%s/drafts.json", url.QueryEscape(clientId))
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return nil, err
+	}
+	campaigns := make([]*clients.DraftCampaign, len(result))
+	for i, c := range result {
+		cm, err := c.ToDraftCampaign()
+		if err != nil {
+			return nil, newClientError(ErrCodeDataProcessing)
+		}
+		campaigns[i] = cm
 	}
 	return campaigns, nil
 }

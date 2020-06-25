@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/mail"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -574,13 +575,15 @@ func TestClientsAPI_Get(t *testing.T) {
 }
 
 func TestClientsAPI_SentCampaigns(t *testing.T) {
+	date := time.Date(2020, 12, 1, 20, 21, 22, 0, time.UTC)
 	testCases := []struct {
-		title                string
-		forceHTTPClientError bool
-		response             *http.Response
-		expected             []*clients.SentCampaign
-		expectedError        error
-		oAuthAuthentication  bool
+		title                 string
+		forceHTTPClientError  bool
+		response              *http.Response
+		expected              []*clients.SentCampaign
+		expectedError         error
+		oAuthAuthentication   bool
+		expectClientSideError bool
 	}{
 		{
 			title: "no campaigns",
@@ -612,7 +615,7 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
 					"CampaignID": "id",
 					"Subject": "subject",
 					"Name": "name",
-					"SentDate": "sent_date",
+					"SentDate": "2020-12-01 20:21:22",
 					"TotalRecipients": 100
     			}
 			]`)),
@@ -631,7 +634,7 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
 						WebVersionTextURL: "web_version_text",
 						Subject:           "subject",
 					},
-					SentDate:   "sent_date",
+					SentDate:   date,
 					Recipients: 100,
 				},
 			},
@@ -650,7 +653,7 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
 					"CampaignID": "id",
 					"Subject": "subject",
 					"Name": "name",
-					"SentDate": "sent_date",
+					"SentDate": "2020-12-01 20:21:22",
 					"TotalRecipients": 100
     			}
 			]`)),
@@ -669,11 +672,34 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
 						WebVersionTextURL: "web_version_text",
 						Subject:           "subject",
 					},
-					SentDate:   "sent_date",
+					SentDate:   date,
 					Recipients: 100,
 				},
 			},
 			oAuthAuthentication: true,
+		},
+		{
+			title: "invalid send date",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"FromName": "from_name",
+					"FromEmail": "from@email.com",
+					"ReplyTo": "reply_to",
+					"WebVersionURL": "web_version",
+					"WebVersionTextURL": "web_version_text",
+					"CampaignID": "id",
+					"Subject": "subject",
+					"Name": "name",
+					"SentDate": "invalid date",
+					"TotalRecipients": 100
+    			}
+			]`)),
+			},
+			expected:              nil,
+			expectClientSideError: true,
+			expectedError:         newClientError(ErrCodeDataProcessing),
 		},
 		{
 			title:                "simulate remote call failure",
@@ -700,7 +726,7 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
 				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err, !tC.forceHTTPClientError)
+				checkErrorType(t, err, !tC.expectClientSideError && !tC.forceHTTPClientError)
 			}
 			if diff := cmp.Diff(tC.expected, actual); diff != "" {
 				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
@@ -710,13 +736,17 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
 }
 
 func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
+	scheduleDate := time.Date(2020, 12, 1, 20, 21, 22, 0, time.UTC)
+	createdDate := time.Date(2020, 12, 2, 20, 21, 22, 0, time.UTC)
+
 	testCases := []struct {
-		title                string
-		forceHTTPClientError bool
-		response             *http.Response
-		expected             []*clients.ScheduledCampaign
-		expectedError        error
-		oAuthAuthentication  bool
+		title                 string
+		forceHTTPClientError  bool
+		response              *http.Response
+		expected              []*clients.ScheduledCampaign
+		expectedError         error
+		oAuthAuthentication   bool
+		expectClientSideError bool
 	}{
 		{
 			title: "no campaigns",
@@ -748,8 +778,8 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
 					"CampaignID": "id",
 					"Subject": "subject",
 					"Name": "name",
-					"DateScheduled": "date_scheduled",
-					"DateCreated": "date_created",
+					"DateScheduled": "2020-12-01 20:21:22",
+					"DateCreated": "2020-12-02 20:21:22",
 					"ScheduledTimeZone": "tz"
     			}
 			]`)),
@@ -768,11 +798,59 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
 						WebVersionTextURL: "web_version_text",
 						Subject:           "subject",
 					},
-					DateScheduled: "date_scheduled",
-					DateCreated:   "date_created",
+					DateScheduled: scheduleDate,
+					DateCreated:   createdDate,
 					Timezone:      "tz",
 				},
 			},
+		},
+		{
+			title: "invalid date created",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"FromName": "from_name",
+					"FromEmail": "from@email.com",
+					"ReplyTo": "reply_to",
+					"WebVersionURL": "web_version",
+					"WebVersionTextURL": "web_version_text",
+					"CampaignID": "id",
+					"Subject": "subject",
+					"Name": "name",
+					"DateScheduled": "2020-12-01 20:21:22",
+					"DateCreated": "invalid date",
+					"ScheduledTimeZone": "tz"
+    			}
+			]`)),
+			},
+			expected:              nil,
+			expectClientSideError: true,
+			expectedError:         newClientError(ErrCodeDataProcessing),
+		},
+		{
+			title: "invalid date scheduled",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"FromName": "from_name",
+					"FromEmail": "from@email.com",
+					"ReplyTo": "reply_to",
+					"WebVersionURL": "web_version",
+					"WebVersionTextURL": "web_version_text",
+					"CampaignID": "id",
+					"Subject": "subject",
+					"Name": "name",
+					"DateScheduled": "invalid date",
+					"DateCreated": "2020-12-02 20:21:22",
+					"ScheduledTimeZone": "tz"
+    			}
+			]`)),
+			},
+			expected:              nil,
+			expectClientSideError: true,
+			expectedError:         newClientError(ErrCodeDataProcessing),
 		},
 		{
 			title: "oAuth Authentication",
@@ -788,8 +866,8 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
 					"CampaignID": "id",
 					"Subject": "subject",
 					"Name": "name",
-					"DateScheduled": "date_scheduled",
-					"DateCreated": "date_created",
+					"DateScheduled": "2020-12-01 20:21:22",
+					"DateCreated": "2020-12-02 20:21:22",
 					"ScheduledTimeZone": "tz"
     			}
 			]`)),
@@ -808,8 +886,8 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
 						WebVersionTextURL: "web_version_text",
 						Subject:           "subject",
 					},
-					DateScheduled: "date_scheduled",
-					DateCreated:   "date_created",
+					DateScheduled: scheduleDate,
+					DateCreated:   createdDate,
 					Timezone:      "tz",
 				},
 			},
@@ -840,7 +918,163 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
 				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
-				checkErrorType(t, err, !tC.forceHTTPClientError)
+				checkErrorType(t, err, !tC.expectClientSideError && !tC.forceHTTPClientError)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestClientsAPI_DraftCampaigns(t *testing.T) {
+	date := time.Date(2020, 12, 1, 20, 21, 22, 0, time.UTC)
+	testCases := []struct {
+		title                 string
+		forceHTTPClientError  bool
+		expectClientSideError bool
+		response              *http.Response
+		expected              []*clients.DraftCampaign
+		expectedError         error
+		oAuthAuthentication   bool
+	}{
+		{
+			title: "no campaigns",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
+			},
+			expected: []*clients.DraftCampaign{},
+		},
+		{
+			title: "no campaigns and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: []*clients.DraftCampaign{},
+		},
+		{
+			title: "client with campaigns",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"FromName": "from_name",
+					"FromEmail": "from@email.com",
+					"ReplyTo": "reply_to",
+					"WebVersionURL": "web_version",
+					"WebVersionTextURL": "web_version_text",
+					"CampaignID": "id",
+					"Subject": "subject",
+					"Name": "name",
+					"DateCreated": "2020-12-01 20:21:22"
+    			}
+			]`)),
+			},
+			expected: []*clients.DraftCampaign{
+				{
+					Campaign: clients.Campaign{
+						Id:   "id",
+						Name: "name",
+						From: mail.Address{
+							Name:    "from_name",
+							Address: "from@email.com",
+						},
+						ReplyTo:           "reply_to",
+						WebVersionURL:     "web_version",
+						WebVersionTextURL: "web_version_text",
+						Subject:           "subject",
+					},
+					DateCreated: date,
+				},
+			},
+		},
+		{
+			title: "invalid date value",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"FromName": "from_name",
+					"FromEmail": "from@email.com",
+					"ReplyTo": "reply_to",
+					"WebVersionURL": "web_version",
+					"WebVersionTextURL": "web_version_text",
+					"CampaignID": "id",
+					"Subject": "subject",
+					"Name": "name",
+					"DateCreated": "invalid date"
+    			}
+			]`)),
+			},
+			expected:              nil,
+			expectedError:         newClientError(ErrCodeDataProcessing),
+			expectClientSideError: true,
+		},
+		{
+			title: "oAuth Authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"FromName": "from_name",
+					"FromEmail": "from@email.com",
+					"ReplyTo": "reply_to",
+					"WebVersionURL": "web_version",
+					"WebVersionTextURL": "web_version_text",
+					"CampaignID": "id",
+					"Subject": "subject",
+					"Name": "name",
+					"DateCreated": "2020-12-01 20:21:22"
+    			}
+			]`)),
+			},
+			expected: []*clients.DraftCampaign{
+				{
+					Campaign: clients.Campaign{
+						Id:   "id",
+						Name: "name",
+						From: mail.Address{
+							Name:    "from_name",
+							Address: "from@email.com",
+						},
+						ReplyTo:           "reply_to",
+						WebVersionURL:     "web_version",
+						WebVersionTextURL: "web_version_text",
+						Subject:           "subject",
+					},
+					DateCreated: date,
+				},
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/drafts.json", tC.response)
+			actual, err := client.Clients().DraftCampaigns("client_id")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.expectClientSideError && !tC.forceHTTPClientError)
 			}
 			if diff := cmp.Diff(tC.expected, actual); diff != "" {
 				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)

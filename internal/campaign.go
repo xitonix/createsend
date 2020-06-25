@@ -3,6 +3,8 @@ package internal
 import (
 	"net/mail"
 
+	"github.com/araddon/dateparse"
+
 	"github.com/xitonix/createsend/clients"
 )
 
@@ -15,8 +17,6 @@ type Campaign struct {
 	CampaignID        string
 	Subject           string
 	Name              string
-	SentDate          string
-	TotalRecipients   int64
 }
 
 type SentCampaign struct {
@@ -25,9 +25,13 @@ type SentCampaign struct {
 	TotalRecipients int64
 }
 
-func (c *SentCampaign) ToSendCampaign() *clients.SentCampaign {
+func (c *SentCampaign) ToSendCampaign() (*clients.SentCampaign, error) {
 	if c == nil {
-		return nil
+		return nil, nil
+	}
+	date, err := dateparse.ParseAny(c.SentDate)
+	if err != nil {
+		return nil, err
 	}
 	return &clients.SentCampaign{
 		Campaign: clients.Campaign{
@@ -42,9 +46,9 @@ func (c *SentCampaign) ToSendCampaign() *clients.SentCampaign {
 			WebVersionTextURL: c.WebVersionTextURL,
 			Subject:           c.Subject,
 		},
-		SentDate:   c.SentDate,
+		SentDate:   date,
 		Recipients: c.TotalRecipients,
-	}
+	}, nil
 }
 
 type ScheduledCampaign struct {
@@ -57,9 +61,18 @@ type ScheduledCampaign struct {
 	ScheduledTimeZone string
 }
 
-func (c *ScheduledCampaign) ToScheduledCampaign() *clients.ScheduledCampaign {
+func (c *ScheduledCampaign) ToScheduledCampaign() (*clients.ScheduledCampaign, error) {
 	if c == nil {
-		return nil
+		return nil, nil
+	}
+	dc, err := dateparse.ParseAny(c.DateCreated)
+	if err != nil {
+		return nil, err
+	}
+
+	ds, err := dateparse.ParseAny(c.DateScheduled)
+	if err != nil {
+		return nil, err
 	}
 	return &clients.ScheduledCampaign{
 		Campaign: clients.Campaign{
@@ -74,8 +87,39 @@ func (c *ScheduledCampaign) ToScheduledCampaign() *clients.ScheduledCampaign {
 			WebVersionTextURL: c.WebVersionTextURL,
 			Subject:           c.Subject,
 		},
-		DateCreated:   c.DateCreated,
-		DateScheduled: c.DateScheduled,
+		DateCreated:   dc,
+		DateScheduled: ds,
 		Timezone:      c.ScheduledTimeZone,
+	}, nil
+}
+
+type DraftCampaign struct {
+	Campaign
+	// DateCreated the timestamp when the Campaign was created.
+	DateCreated string
+}
+
+func (c *DraftCampaign) ToDraftCampaign() (*clients.DraftCampaign, error) {
+	if c == nil {
+		return nil, nil
 	}
+	date, err := dateparse.ParseAny(c.DateCreated)
+	if err != nil {
+		return nil, err
+	}
+	return &clients.DraftCampaign{
+		Campaign: clients.Campaign{
+			Id:   c.CampaignID,
+			Name: c.Name,
+			From: mail.Address{
+				Name:    c.FromName,
+				Address: c.FromEmail,
+			},
+			ReplyTo:           c.ReplyTo,
+			WebVersionURL:     c.WebVersionURL,
+			WebVersionTextURL: c.WebVersionTextURL,
+			Subject:           c.Subject,
+		},
+		DateCreated: date,
+	}, nil
 }

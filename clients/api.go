@@ -16,4 +16,6 @@ type API interface {
 	SentCampaigns(clientId string) ([]*SentCampaign, error)
 	// ScheduledCampaigns returns all currently scheduled campaigns for a client.
 	ScheduledCampaigns(clientId string) ([]*ScheduledCampaign, error)
+	// DraftCampaigns returns all draft campaigns belonging to a client.
+	DraftCampaigns(clientId string) ([]*DraftCampaign, error)
 }
