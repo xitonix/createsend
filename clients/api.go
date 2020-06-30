@@ -18,4 +18,6 @@ type API interface {
 	ScheduledCampaigns(clientId string) ([]*ScheduledCampaign, error)
 	// DraftCampaigns returns all draft campaigns belonging to a client.
 	DraftCampaigns(clientId string) ([]*DraftCampaign, error)
+	// Lists returns all the subscriber lists that belong to a client.
+	Lists(clientId string) ([]*List, error)
 }

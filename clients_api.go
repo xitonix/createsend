@@ -134,3 +134,13 @@ func (a *clientsAPI) DraftCampaigns(clientId string) ([]*clients.DraftCampaign, 
 	}
 	return campaigns, nil
 }
+
+func (a *clientsAPI) Lists(clientId string) ([]*clients.List, error) {
+	result := make([]*clients.List, 0)
+	path := fmt.Sprintf("clients/%s/lists.json", url.QueryEscape(clientId))
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

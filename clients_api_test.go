@@ -1082,3 +1082,99 @@ func TestClientsAPI_DraftCampaigns(t *testing.T) {
 		})
 	}
 }
+
+func TestClientsAPI_Lists(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expected             []*clients.List
+		expectedError        error
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "no lists",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
+			},
+			expected: []*clients.List{},
+		},
+		{
+			title: "no lists and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: []*clients.List{},
+		},
+		{
+			title: "client with lists",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"ListID": "list_id",
+					"Name": "list_name"
+    			}
+			]`)),
+			},
+			expected: []*clients.List{
+				{
+					Id:   "list_id",
+					Name: "list_name",
+				},
+			},
+		},
+		{
+			title: "oAuth Authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"ListID": "list_id",
+					"Name": "list_name"
+    			}
+			]`)),
+			},
+			expected: []*clients.List{
+				{
+					Id:   "list_id",
+					Name: "list_name",
+				},
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/lists.json", tC.response)
+			actual, err := client.Clients().Lists("client_id")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
