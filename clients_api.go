@@ -144,3 +144,21 @@ func (a *clientsAPI) Lists(clientId string) ([]*clients.List, error) {
 	}
 	return result, nil
 }
+
+func (a *clientsAPI) ListsByEmailAddress(clientId, emailAddress string) ([]*clients.SubscriberList, error) {
+	result := make([]*internal.SubscriberList, 0)
+	path := fmt.Sprintf("clients/%s/listsforemail.json?email=%s", url.QueryEscape(clientId), url.QueryEscape(emailAddress))
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return nil, err
+	}
+	lists := make([]*clients.SubscriberList, len(result))
+	for i, r := range result {
+		sl, err := r.ToSubscriberList()
+		if err != nil {
+			return nil, newClientError(ErrCodeDataProcessing)
+		}
+		lists[i] = sl
+	}
+	return lists, nil
+}

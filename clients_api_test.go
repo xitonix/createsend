@@ -1178,3 +1178,134 @@ func TestClientsAPI_Lists(t *testing.T) {
 		})
 	}
 }
+
+func TestClientsAPI_ListsByEmailAddress(t *testing.T) {
+	date := time.Date(2020, 12, 1, 20, 21, 22, 0, time.UTC)
+	testCases := []struct {
+		title                 string
+		forceHTTPClientError  bool
+		expectClientSideError bool
+		response              *http.Response
+		expected              []*clients.SubscriberList
+		expectedError         error
+		oAuthAuthentication   bool
+	}{
+		{
+			title: "no lists",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
+			},
+			expected: []*clients.SubscriberList{},
+		},
+		{
+			title: "no lists and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: []*clients.SubscriberList{},
+		},
+		{
+			title: "client with lists",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"ListID": "list_id",
+					"ListName": "list_name",
+					"SubscriberState": "state", 
+					"DateSubscriberAdded": "2020-12-01 20:21:22"
+    			}
+			]`)),
+			},
+			expected: []*clients.SubscriberList{
+				{
+					List: clients.List{
+						Id:   "list_id",
+						Name: "list_name",
+					},
+					Subscriber: clients.Subscriber{
+						State:     "state",
+						DateAdded: date,
+					},
+				},
+			},
+		},
+		{
+			title: "invalid date value",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"ListID": "list_id",
+					"ListName": "list_name",
+					"SubscriberState": "state", 
+					"DateSubscriberAdded": "invalid date"
+    			}
+			]`)),
+			},
+			expected:              nil,
+			expectedError:         newClientError(ErrCodeDataProcessing),
+			expectClientSideError: true,
+		},
+		{
+			title: "oAuth Authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"ListID": "list_id",
+					"ListName": "list_name",
+					"SubscriberState": "state", 
+					"DateSubscriberAdded": "2020-12-01 20:21:22"
+    			}
+			]`)),
+			},
+			expected: []*clients.SubscriberList{
+				{
+					List: clients.List{
+						Id:   "list_id",
+						Name: "list_name",
+					},
+					Subscriber: clients.Subscriber{
+						State:     "state",
+						DateAdded: date,
+					},
+				},
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/listsforemail.json", tC.response)
+			actual, err := client.Clients().ListsByEmailAddress("client_id", "email@address.com")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.expectClientSideError && !tC.forceHTTPClientError)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}

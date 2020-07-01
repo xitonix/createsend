@@ -20,4 +20,6 @@ type API interface {
 	DraftCampaigns(clientId string) ([]*DraftCampaign, error)
 	// Lists returns all the subscriber lists that belong to a client.
 	Lists(clientId string) ([]*List, error)
+	// ListsByEmailAddress returns all the subscriber lists across the client, to which an email address is subscribed.
+	ListsByEmailAddress(clientId, emailAddress string) ([]*SubscriberList, error)
 }
