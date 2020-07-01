@@ -199,3 +199,20 @@ func (a *clientsAPI) SuppressionList(clientId string,
 
 	return list, nil
 }
+
+func (a *clientsAPI) Suppress(clientId string, emails ...string) error {
+	data := struct {
+		EmailAddresses []string
+	}{
+		EmailAddresses: emails,
+	}
+	path := fmt.Sprintf("clients/%s/suppress.json", url.QueryEscape(clientId))
+	return a.client.Post(path, nil, data)
+}
+
+func (a *clientsAPI) UnSuppress(clientId string, email string) error {
+	path := fmt.Sprintf("clients/%s/unsuppress.json?email=%s",
+		url.QueryEscape(clientId),
+		url.QueryEscape(email))
+	return a.client.Put(path, nil, nil)
+}

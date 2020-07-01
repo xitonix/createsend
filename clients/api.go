@@ -28,4 +28,8 @@ type API interface {
 	Segments(clientId string) ([]*Segment, error)
 	// SuppressionList returns a paged result representing the client’s suppression list.
 	SuppressionList(clientId string, pageSize, page int, orderBy order.SuppressionListField, direction order.Direction) (*SuppressionList, error)
+	// Suppress adds the email addresses provided to the client’s suppression list.
+	Suppress(clientId string, emails ...string) error
+	// UnSuppress removes the email address from a client’s suppression list.
+	UnSuppress(clientId string, email string) error
 }
