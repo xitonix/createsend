@@ -1309,3 +1309,103 @@ func TestClientsAPI_ListsByEmailAddress(t *testing.T) {
 		})
 	}
 }
+
+func TestClientsAPI_Segments(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expected             []*clients.Segment
+		expectedError        error
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "no segments",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
+			},
+			expected: []*clients.Segment{},
+		},
+		{
+			title: "no segments and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: []*clients.Segment{},
+		},
+		{
+			title: "client with segments",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"SegmentID": "segment_id",
+					"ListID": "list_id",
+					"Title": "segment_title"
+    			}
+			]`)),
+			},
+			expected: []*clients.Segment{
+				{
+					Id:     "segment_id",
+					Title:  "segment_title",
+					ListId: "list_id",
+				},
+			},
+		},
+		{
+			title: "oAuth Authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"SegmentID": "segment_id",
+					"ListID": "list_id",
+					"Title": "segment_title"
+    			}
+			]`)),
+			},
+			expected: []*clients.Segment{
+				{
+					Id:     "segment_id",
+					Title:  "segment_title",
+					ListId: "list_id",
+				},
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/segments.json", tC.response)
+			actual, err := client.Clients().Segments("client_id")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}

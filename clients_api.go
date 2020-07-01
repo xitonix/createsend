@@ -162,3 +162,13 @@ func (a *clientsAPI) ListsByEmailAddress(clientId, emailAddress string) ([]*clie
 	}
 	return lists, nil
 }
+
+func (a *clientsAPI) Segments(clientId string) ([]*clients.Segment, error) {
+	result := make([]*clients.Segment, 0)
+	path := fmt.Sprintf("clients/%s/segments.json", url.QueryEscape(clientId))
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

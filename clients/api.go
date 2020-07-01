@@ -22,4 +22,6 @@ type API interface {
 	Lists(clientId string) ([]*List, error)
 	// ListsByEmailAddress returns all the subscriber lists across the client, to which an email address is subscribed.
 	ListsByEmailAddress(clientId, emailAddress string) ([]*SubscriberList, error)
+	// Segments returns a list of all list segments belonging to a particular client.
+	Segments(clientId string) ([]*Segment, error)
 }
