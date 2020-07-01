@@ -7,6 +7,7 @@ import (
 
 	"github.com/xitonix/createsend/clients"
 	"github.com/xitonix/createsend/internal"
+	"github.com/xitonix/createsend/order"
 )
 
 const (
@@ -171,4 +172,30 @@ func (a *clientsAPI) Segments(clientId string) ([]*clients.Segment, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (a *clientsAPI) SuppressionList(clientId string,
+	pageSize, page int,
+	orderBy order.SuppressionListField,
+	direction order.Direction) (*clients.SuppressionList, error) {
+
+	path := fmt.Sprintf("clients/%s/suppressionlist.json?page=%d&pagesize=%d&orderfield=%s&orderdirection=%s",
+		url.QueryEscape(clientId),
+		page,
+		pageSize,
+		url.QueryEscape(orderBy.String()),
+		url.QueryEscape(direction.String()))
+
+	result := new(internal.SuppressionList)
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := result.ToSuppressionList()
+	if err != nil {
+		return nil, newClientError(ErrCodeDataProcessing)
+	}
+
+	return list, nil
 }

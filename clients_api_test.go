@@ -12,6 +12,7 @@ import (
 
 	"github.com/xitonix/createsend/clients"
 	"github.com/xitonix/createsend/mock"
+	"github.com/xitonix/createsend/order"
 )
 
 func TestClientsAPI_Create(t *testing.T) {
@@ -1402,6 +1403,350 @@ func TestClientsAPI_Segments(t *testing.T) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
 				}
 				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestClientsAPI_SuppressionList(t *testing.T) {
+	date := time.Date(2020, 12, 1, 20, 21, 22, 0, time.UTC)
+	testCases := []struct {
+		title                 string
+		forceHTTPClientError  bool
+		expectClientSideError bool
+		response              *http.Response
+		expected              *clients.SuppressionList
+		expectedError         error
+		oAuthAuthentication   bool
+	}{
+		{
+			title: "no lists",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			expected: &clients.SuppressionList{
+				Entries: []*clients.SuppressionDetails{},
+			},
+		},
+		{
+			title: "no lists and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: &clients.SuppressionList{
+				Entries: []*clients.SuppressionDetails{},
+			},
+		},
+		{
+			title: "client with suppression list order by email asc",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+							{
+								"SuppressionReason": "reason",
+								"EmailAddress": "email@address.com",
+								"Date": "2020-12-01 20:21:22",
+								"State": "state"
+							}
+						],
+						"ResultsOrderedBy": "email",
+						"OrderDirection": "asc",
+						"PageNumber": 1,
+						"PageSize": 1000,
+						"RecordsOnThisPage": 2,
+						"TotalNumberOfRecords": 5,
+						"NumberOfPages": 10
+					}`)),
+			},
+			expected: &clients.SuppressionList{
+				Entries: []*clients.SuppressionDetails{
+					{
+						Reason:       "reason",
+						EmailAddress: "email@address.com",
+						Date:         date,
+						State:        "state",
+					},
+				},
+				OrderedBy:            order.BySuppressedEmailAddress,
+				OrderDirection:       order.ASC,
+				PageNumber:           1,
+				PageSize:             1000,
+				RecordsOnThisPage:    2,
+				TotalNumberOfRecords: 5,
+				NumberOfPages:        10,
+			},
+		},
+		{
+			title: "client with suppression list order by email desc",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+							{
+								"SuppressionReason": "reason",
+								"EmailAddress": "email@address.com",
+								"Date": "2020-12-01 20:21:22",
+								"State": "state"
+							}
+						],
+						"ResultsOrderedBy": "email",
+						"OrderDirection": "desc",
+						"PageNumber": 1,
+						"PageSize": 1000,
+						"RecordsOnThisPage": 2,
+						"TotalNumberOfRecords": 5,
+						"NumberOfPages": 10
+					}`)),
+			},
+			expected: &clients.SuppressionList{
+				Entries: []*clients.SuppressionDetails{
+					{
+						Reason:       "reason",
+						EmailAddress: "email@address.com",
+						Date:         date,
+						State:        "state",
+					},
+				},
+				OrderedBy:            order.BySuppressedEmailAddress,
+				OrderDirection:       order.DESC,
+				PageNumber:           1,
+				PageSize:             1000,
+				RecordsOnThisPage:    2,
+				TotalNumberOfRecords: 5,
+				NumberOfPages:        10,
+			},
+		},
+		{
+			title: "client with suppression list order by date asc",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+							{
+								"SuppressionReason": "reason",
+								"EmailAddress": "email@address.com",
+								"Date": "2020-12-01 20:21:22",
+								"State": "state"
+							}
+						],
+						"ResultsOrderedBy": "date",
+						"OrderDirection": "asc",
+						"PageNumber": 1,
+						"PageSize": 1000,
+						"RecordsOnThisPage": 2,
+						"TotalNumberOfRecords": 5,
+						"NumberOfPages": 10
+					}`)),
+			},
+			expected: &clients.SuppressionList{
+				Entries: []*clients.SuppressionDetails{
+					{
+						Reason:       "reason",
+						EmailAddress: "email@address.com",
+						Date:         date,
+						State:        "state",
+					},
+				},
+				OrderedBy:            order.BySuppressionDate,
+				OrderDirection:       order.ASC,
+				PageNumber:           1,
+				PageSize:             1000,
+				RecordsOnThisPage:    2,
+				TotalNumberOfRecords: 5,
+				NumberOfPages:        10,
+			},
+		},
+		{
+			title: "client with suppression list order by date desc",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+							{
+								"SuppressionReason": "reason",
+								"EmailAddress": "email@address.com",
+								"Date": "2020-12-01 20:21:22",
+								"State": "state"
+							}
+						],
+						"ResultsOrderedBy": "date",
+						"OrderDirection": "desc",
+						"PageNumber": 1,
+						"PageSize": 1000,
+						"RecordsOnThisPage": 2,
+						"TotalNumberOfRecords": 5,
+						"NumberOfPages": 10
+					}`)),
+			},
+			expected: &clients.SuppressionList{
+				Entries: []*clients.SuppressionDetails{
+					{
+						Reason:       "reason",
+						EmailAddress: "email@address.com",
+						Date:         date,
+						State:        "state",
+					},
+				},
+				OrderedBy:            order.BySuppressionDate,
+				OrderDirection:       order.DESC,
+				PageNumber:           1,
+				PageSize:             1000,
+				RecordsOnThisPage:    2,
+				TotalNumberOfRecords: 5,
+				NumberOfPages:        10,
+			},
+		},
+		{
+			title: "invalid order field",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+							{
+								"SuppressionReason": "reason",
+								"EmailAddress": "email@address.com",
+								"Date": "2020-12-01 20:21:22",
+								"State": "state"
+							}
+						],
+						"ResultsOrderedBy": "invalid",
+						"OrderDirection": "desc",
+						"PageNumber": 1,
+						"PageSize": 1000,
+						"RecordsOnThisPage": 2,
+						"TotalNumberOfRecords": 5,
+						"NumberOfPages": 10
+					}`)),
+			},
+			expected:              nil,
+			expectedError:         newClientError(ErrCodeInvalidJson),
+			expectClientSideError: true,
+		},
+		{
+			title: "invalid order direction",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+							{
+								"SuppressionReason": "reason",
+								"EmailAddress": "email@address.com",
+								"Date": "2020-12-01 20:21:22",
+								"State": "state"
+							}
+						],
+						"ResultsOrderedBy": "email",
+						"OrderDirection": "invalid",
+						"PageNumber": 1,
+						"PageSize": 1000,
+						"RecordsOnThisPage": 2,
+						"TotalNumberOfRecords": 5,
+						"NumberOfPages": 10
+					}`)),
+			},
+			expected:              nil,
+			expectedError:         newClientError(ErrCodeInvalidJson),
+			expectClientSideError: true,
+		},
+		{
+			title: "invalid date",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+							{
+								"SuppressionReason": "reason",
+								"EmailAddress": "email@address.com",
+								"Date": "invalid date",
+								"State": "state"
+							}
+						],
+						"ResultsOrderedBy": "email",
+						"OrderDirection": "asc",
+						"PageNumber": 1,
+						"PageSize": 1000,
+						"RecordsOnThisPage": 2,
+						"TotalNumberOfRecords": 5,
+						"NumberOfPages": 10
+					}`)),
+			},
+			expected:              nil,
+			expectedError:         newClientError(ErrCodeDataProcessing),
+			expectClientSideError: true,
+		},
+		{
+			title: "oAuth Authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+							{
+								"SuppressionReason": "reason",
+								"EmailAddress": "email@address.com",
+								"Date": "2020-12-01 20:21:22",
+								"State": "state"
+							}
+						],
+						"ResultsOrderedBy": "date",
+						"OrderDirection": "desc",
+						"PageNumber": 1,
+						"PageSize": 1000,
+						"RecordsOnThisPage": 2,
+						"TotalNumberOfRecords": 5,
+						"NumberOfPages": 10
+					}`)),
+			},
+			expected: &clients.SuppressionList{
+				Entries: []*clients.SuppressionDetails{
+					{
+						Reason:       "reason",
+						EmailAddress: "email@address.com",
+						Date:         date,
+						State:        "state",
+					},
+				},
+				OrderedBy:            order.BySuppressionDate,
+				OrderDirection:       order.DESC,
+				PageNumber:           1,
+				PageSize:             1000,
+				RecordsOnThisPage:    2,
+				TotalNumberOfRecords: 5,
+				NumberOfPages:        10,
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/suppressionlist.json", tC.response)
+			actual, err := client.Clients().SuppressionList("client_id", 1000, 1, order.BySuppressedEmailAddress, order.ASC)
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.expectClientSideError && !tC.forceHTTPClientError)
 			}
 			if diff := cmp.Diff(tC.expected, actual); diff != "" {
 				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)

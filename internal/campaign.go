@@ -100,9 +100,6 @@ type DraftCampaign struct {
 }
 
 func (c *DraftCampaign) ToDraftCampaign() (*clients.DraftCampaign, error) {
-	if c == nil {
-		return nil, nil
-	}
 	date, err := dateparse.ParseAny(c.DateCreated)
 	if err != nil {
 		return nil, err

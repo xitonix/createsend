@@ -1,5 +1,7 @@
 package clients
 
+import "github.com/xitonix/createsend/order"
+
 // API is an interface that wraps client related operations.
 //
 // The API contains all the functionality you need to manage the clients in your account.
@@ -24,4 +26,6 @@ type API interface {
 	ListsByEmailAddress(clientId, emailAddress string) ([]*SubscriberList, error)
 	// Segments returns a list of all list segments belonging to a particular client.
 	Segments(clientId string) ([]*Segment, error)
+	// SuppressionList returns a paged result representing the client’s suppression list.
+	SuppressionList(clientId string, pageSize, page int, orderBy order.SuppressionListField, direction order.Direction) (*SuppressionList, error)
 }
