@@ -216,3 +216,13 @@ func (a *clientsAPI) UnSuppress(clientId string, email string) error {
 		url.QueryEscape(email))
 	return a.client.Put(path, nil, nil)
 }
+
+func (a *clientsAPI) Templates(clientId string) ([]*clients.Template, error) {
+	result := make([]*clients.Template, 0)
+	path := fmt.Sprintf("clients/%s/templates.json", url.QueryEscape(clientId))
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

@@ -32,4 +32,5 @@ type API interface {
 	Suppress(clientId string, emails ...string) error
 	// UnSuppress removes the email address from a client’s suppression list.
 	UnSuppress(clientId string, email string) error
+	Templates(clientId string) ([]*Template, error)
 }
