@@ -1,7 +1,7 @@
 package clients
 
-// Client represents a client.
-type Client struct {
+// BasicDetails represents a client's basic details.
+type BasicDetails struct {
 	// Company company name.
 	Company string `json:"CompanyName"`
 	// Country country.

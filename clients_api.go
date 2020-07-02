@@ -22,9 +22,9 @@ func newClientsAPI(client internal.Client) *clientsAPI {
 	return &clientsAPI{client: client}
 }
 
-func (a *clientsAPI) Create(client clients.Client) (string, error) {
+func (a *clientsAPI) Create(details clients.BasicDetails) (string, error) {
 	var clientId string
-	err := a.client.Post(clientsPath, &clientId, client)
+	err := a.client.Post(clientsPath, &clientId, details)
 	return strings.Trim(clientId, `"`), err
 }
 
@@ -225,4 +225,9 @@ func (a *clientsAPI) Templates(clientId string) ([]*clients.Template, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (a *clientsAPI) Update(clientId string, details clients.BasicDetails) error {
+	path := fmt.Sprintf("clients/%s/setbasics.json", url.QueryEscape(clientId))
+	return a.client.Put(path, nil, details)
 }

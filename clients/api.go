@@ -11,7 +11,7 @@ type API interface {
 	// Create creates a new client in your account with basic contact information and no access to the application.
 	//
 	// Client billing options are set once the client is created.
-	Create(client Client) (string, error)
+	Create(details BasicDetails) (string, error)
 	// Get returns the complete details for a client including their API key, access level, contact details and billing settings.
 	Get(clientId string) (*ClientDetails, error)
 	// SentCampaign returns a list of all sent campaigns for a client.
@@ -32,5 +32,11 @@ type API interface {
 	Suppress(clientId string, emails ...string) error
 	// UnSuppress removes the email address from a client’s suppression list.
 	UnSuppress(clientId string, email string) error
+	//Templates returns a list of the templates belonging to the client.
 	Templates(clientId string) ([]*Template, error)
+	// Update updates the basic account details for an existing client.
+	//
+	// If the client is paying itself, changing the country may have unexpected tax implications.
+	// If you need to change a client’s country, do so through the UI by updating their payment details.
+	Update(clientId string, details BasicDetails) error
 }

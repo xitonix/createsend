@@ -21,7 +21,7 @@ func TestClientsAPI_Create(t *testing.T) {
 		forceHTTPClientError bool
 		response             *http.Response
 		expectedError        error
-		input                clients.Client
+		input                clients.BasicDetails
 		expectedResult       string
 		oAuthAuthentication  bool
 	}{
@@ -1962,6 +1962,60 @@ func TestClientsAPI_Templates(t *testing.T) {
 			}
 			if diff := cmp.Diff(tC.expected, actual); diff != "" {
 				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestClientsAPI_Update(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "receiving 200 from the server means success",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+		},
+		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/setbasics.json", tC.response)
+			err := client.Clients().Update("client_id", clients.BasicDetails{})
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
 			}
 		})
 	}

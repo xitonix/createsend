@@ -483,7 +483,6 @@ func TestAccountsAPI_UpdateAdministrator(t *testing.T) {
 		forceHTTPClientError bool
 		response             *http.Response
 		expectedError        error
-		input                accounts.Administrator
 		oAuthAuthentication  bool
 	}{
 		{
@@ -521,7 +520,7 @@ func TestAccountsAPI_UpdateAdministrator(t *testing.T) {
 		t.Run(tC.title, func(t *testing.T) {
 			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse(administratorsPath, tC.response)
-			err := client.Accounts().UpdateAdministrator("old+email@address.com", tC.input)
+			err := client.Accounts().UpdateAdministrator("old+email@address.com", accounts.Administrator{})
 			if err != nil {
 				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
