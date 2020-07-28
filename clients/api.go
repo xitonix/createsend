@@ -43,4 +43,6 @@ type API interface {
 	SetPAYGBilling(clientID string, rates PAYGRates) error
 	// SetMonthlyBilling sets the client's monthly billing rates.
 	SetMonthlyBilling(clientID string, rates MonthlyRates) error
+	// TransferCredits Transfers credits from your account to a client, or transfer credits from a client to your account.
+	TransferCredits(clientID string, request CreditTransferRequest) (*CreditTransferResult, error)
 }

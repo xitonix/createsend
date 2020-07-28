@@ -241,3 +241,13 @@ func (a *clientsAPI) SetMonthlyBilling(clientID string, rates clients.MonthlyRat
 	path := fmt.Sprintf("clients/%s/setmonthlybilling.json", url.QueryEscape(clientID))
 	return a.client.Put(path, nil, rates)
 }
+
+func (a *clientsAPI) TransferCredits(clientID string, request clients.CreditTransferRequest) (*clients.CreditTransferResult, error) {
+	path := fmt.Sprintf("clients/%s/credits.json", url.QueryEscape(clientID))
+	var result *clients.CreditTransferResult
+	err := a.client.Post(path, &result, request)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
