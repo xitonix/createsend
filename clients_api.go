@@ -55,7 +55,7 @@ func (a *clientsAPI) Get(clientID string) (*clients.ClientDetails, error) {
 
 	clientDetails := &clients.ClientDetails{
 		APIKey:   result.APIKey,
-		Id:       result.BasicDetails.ClientID,
+		ID:       result.BasicDetails.ClientID,
 		Company:  result.BasicDetails.CompanyName,
 		Country:  result.BasicDetails.Country,
 		Timezone: result.BasicDetails.TimeZone,

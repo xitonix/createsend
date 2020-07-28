@@ -10,8 +10,8 @@ type EmbeddedSession struct {
 	Chrome string
 	// URL the Campaign Monitor page to load
 	URL string `json:"Url"`
-	// IntegratorId your integration Id.
-	IntegratorId string `json:"IntegratorID"`
-	// ClientId the client Id of the account you want to access.
-	ClientId string `json:"ClientID"`
+	// IntegratorID your integration ID.
+	IntegratorID string
+	// ClientID the client ID of the account you want to access.
+	ClientID string
 }

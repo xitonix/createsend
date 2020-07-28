@@ -18,8 +18,8 @@ const (
 	ErrCodeEmptyURL ClientErrorCode = -6
 	// ErrCodeInvalidURL the requested UTL was invalid.
 	ErrCodeInvalidURL ClientErrorCode = -7
-	// ErrCodeInvalidJson the provided Json payload was invalid.
-	ErrCodeInvalidJson ClientErrorCode = -8
+	// ErrCodeInvalidJSON the provided JSON payload was invalid.
+	ErrCodeInvalidJSON ClientErrorCode = -8
 	// ErrCodeInvalidRequestBody the provided request was invalid.
 	ErrCodeInvalidRequestBody ClientErrorCode = -9
 )
@@ -39,8 +39,8 @@ func (c ClientErrorCode) String() string {
 		return "the provided URL was empty"
 	case ErrCodeInvalidURL:
 		return "the provided URL is invalid"
-	case ErrCodeInvalidJson:
-		return "invalid json data"
+	case ErrCodeInvalidJSON:
+		return "invalid JSON data"
 	case ErrCodeInvalidRequestBody:
 		return "invalid request body"
 	default:

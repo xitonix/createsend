@@ -107,7 +107,7 @@ func (h *httpClient) do(method, path string, result, body interface{}) error {
 		var csError Error
 		err = json.NewDecoder(response.Body).Decode(&csError)
 		if err != nil {
-			return newWrappedClientError("Failed to decode the server error response", err, ErrCodeInvalidJson)
+			return newWrappedClientError("Failed to decode the server error response", err, ErrCodeInvalidJSON)
 		}
 		csError.err = errors.New(csError.Message)
 		return &csError
@@ -117,7 +117,7 @@ func (h *httpClient) do(method, path string, result, body interface{}) error {
 		// io.EOF means that server returned an empty response
 		// Successful HTTP status code with an empty response is Ok!
 		if err != nil && !errors.Is(err, io.EOF) {
-			return newWrappedClientError("Failed to decode the server response", err, ErrCodeInvalidJson)
+			return newWrappedClientError("Failed to decode the server response", err, ErrCodeInvalidJSON)
 		}
 	}
 	return nil

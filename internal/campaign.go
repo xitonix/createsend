@@ -38,7 +38,7 @@ func (c *SentCampaign) ToSendCampaign() (*clients.SentCampaign, error) {
 	}
 	return &clients.SentCampaign{
 		Campaign: clients.Campaign{
-			Id:   c.CampaignID,
+			ID:   c.CampaignID,
 			Name: c.Name,
 			From: mail.Address{
 				Name:    c.FromName,
@@ -81,7 +81,7 @@ func (c *ScheduledCampaign) ToScheduledCampaign() (*clients.ScheduledCampaign, e
 	}
 	return &clients.ScheduledCampaign{
 		Campaign: clients.Campaign{
-			Id:   c.CampaignID,
+			ID:   c.CampaignID,
 			Name: c.Name,
 			From: mail.Address{
 				Name:    c.FromName,
@@ -113,7 +113,7 @@ func (c *DraftCampaign) ToDraftCampaign() (*clients.DraftCampaign, error) {
 	}
 	return &clients.DraftCampaign{
 		Campaign: clients.Campaign{
-			Id:   c.CampaignID,
+			ID:   c.CampaignID,
 			Name: c.Name,
 			From: mail.Address{
 				Name:    c.FromName,

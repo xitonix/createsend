@@ -139,7 +139,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			},
 			expected: &clients.ClientDetails{
 				APIKey:   "api_key",
-				Id:       "client_id",
+				ID:       "client_id",
 				Company:  "company_name",
 				Country:  "country",
 				Timezone: "timezone",
@@ -201,7 +201,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			},
 			expected: &clients.ClientDetails{
 				APIKey:   "api_key",
-				Id:       "client_id",
+				ID:       "client_id",
 				Company:  "company_name",
 				Country:  "country",
 				Timezone: "timezone",
@@ -282,7 +282,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			},
 			expected: &clients.ClientDetails{
 				APIKey:   "api_key",
-				Id:       "client_id",
+				ID:       "client_id",
 				Company:  "company_name",
 				Country:  "country",
 				Timezone: "timezone",
@@ -371,7 +371,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			},
 			expected: &clients.ClientDetails{
 				APIKey:   "api_key",
-				Id:       "client_id",
+				ID:       "client_id",
 				Company:  "company_name",
 				Country:  "country",
 				Timezone: "timezone",
@@ -427,7 +427,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			},
 			expected: &clients.ClientDetails{
 				APIKey:   "api_key",
-				Id:       "client_id",
+				ID:       "client_id",
 				Company:  "company_name",
 				Country:  "country",
 				Timezone: "timezone",
@@ -453,7 +453,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			},
 			expected: &clients.ClientDetails{
 				APIKey:   "api_key",
-				Id:       "client_id",
+				ID:       "client_id",
 				Company:  "company_name",
 				Country:  "country",
 				Timezone: "timezone",
@@ -484,7 +484,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			},
 			expected: &clients.ClientDetails{
 				APIKey:   "api_key",
-				Id:       "client_id",
+				ID:       "client_id",
 				Company:  "company_name",
 				Country:  "country",
 				Timezone: "timezone",
@@ -519,7 +519,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			},
 			expected: &clients.ClientDetails{
 				APIKey:   "api_key",
-				Id:       "client_id",
+				ID:       "client_id",
 				Company:  "company_name",
 				Country:  "country",
 				Timezone: "timezone",
@@ -624,7 +624,7 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
 			expected: []*clients.SentCampaign{
 				{
 					Campaign: clients.Campaign{
-						Id:   "id",
+						ID:   "id",
 						Name: "name",
 						From: mail.Address{
 							Name:    "from_name",
@@ -662,7 +662,7 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
 			expected: []*clients.SentCampaign{
 				{
 					Campaign: clients.Campaign{
-						Id:   "id",
+						ID:   "id",
 						Name: "name",
 						From: mail.Address{
 							Name:    "from_name",
@@ -788,7 +788,7 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
 			expected: []*clients.ScheduledCampaign{
 				{
 					Campaign: clients.Campaign{
-						Id:   "id",
+						ID:   "id",
 						Name: "name",
 						From: mail.Address{
 							Name:    "from_name",
@@ -876,7 +876,7 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
 			expected: []*clients.ScheduledCampaign{
 				{
 					Campaign: clients.Campaign{
-						Id:   "id",
+						ID:   "id",
 						Name: "name",
 						From: mail.Address{
 							Name:    "from_name",
@@ -976,7 +976,7 @@ func TestClientsAPI_DraftCampaigns(t *testing.T) {
 			expected: []*clients.DraftCampaign{
 				{
 					Campaign: clients.Campaign{
-						Id:   "id",
+						ID:   "id",
 						Name: "name",
 						From: mail.Address{
 							Name:    "from_name",
@@ -1034,7 +1034,7 @@ func TestClientsAPI_DraftCampaigns(t *testing.T) {
 			expected: []*clients.DraftCampaign{
 				{
 					Campaign: clients.Campaign{
-						Id:   "id",
+						ID:   "id",
 						Name: "name",
 						From: mail.Address{
 							Name:    "from_name",
@@ -1122,7 +1122,7 @@ func TestClientsAPI_Lists(t *testing.T) {
 			},
 			expected: []*clients.List{
 				{
-					Id:   "list_id",
+					ID:   "list_id",
 					Name: "list_name",
 				},
 			},
@@ -1140,7 +1140,7 @@ func TestClientsAPI_Lists(t *testing.T) {
 			},
 			expected: []*clients.List{
 				{
-					Id:   "list_id",
+					ID:   "list_id",
 					Name: "list_name",
 				},
 			},
@@ -1223,7 +1223,7 @@ func TestClientsAPI_ListsByEmailAddress(t *testing.T) {
 			expected: []*clients.SubscriberList{
 				{
 					List: clients.List{
-						Id:   "list_id",
+						ID:   "list_id",
 						Name: "list_name",
 					},
 					Subscriber: clients.Subscriber{
@@ -1266,7 +1266,7 @@ func TestClientsAPI_ListsByEmailAddress(t *testing.T) {
 			expected: []*clients.SubscriberList{
 				{
 					List: clients.List{
-						Id:   "list_id",
+						ID:   "list_id",
 						Name: "list_name",
 					},
 					Subscriber: clients.Subscriber{
@@ -1350,9 +1350,9 @@ func TestClientsAPI_Segments(t *testing.T) {
 			},
 			expected: []*clients.Segment{
 				{
-					Id:     "segment_id",
+					ID:     "segment_id",
 					Title:  "segment_title",
-					ListId: "list_id",
+					ListID: "list_id",
 				},
 			},
 		},
@@ -1370,9 +1370,9 @@ func TestClientsAPI_Segments(t *testing.T) {
 			},
 			expected: []*clients.Segment{
 				{
-					Id:     "segment_id",
+					ID:     "segment_id",
 					Title:  "segment_title",
-					ListId: "list_id",
+					ListID: "list_id",
 				},
 			},
 			oAuthAuthentication: true,
@@ -1625,7 +1625,7 @@ func TestClientsAPI_SuppressionList(t *testing.T) {
 					}`)),
 			},
 			expected:              nil,
-			expectedError:         newClientError(ErrCodeInvalidJson),
+			expectedError:         newClientError(ErrCodeInvalidJSON),
 			expectClientSideError: true,
 		},
 		{
@@ -1651,7 +1651,7 @@ func TestClientsAPI_SuppressionList(t *testing.T) {
 					}`)),
 			},
 			expected:              nil,
-			expectedError:         newClientError(ErrCodeInvalidJson),
+			expectedError:         newClientError(ErrCodeInvalidJSON),
 			expectClientSideError: true,
 		},
 		{
@@ -1903,7 +1903,7 @@ func TestClientsAPI_Templates(t *testing.T) {
 			},
 			expected: []*clients.Template{
 				{
-					Id:            "template_id",
+					ID:            "template_id",
 					Name:          "name",
 					PreviewURL:    "preview_url",
 					ScreenshotURL: "screenshot_url",
@@ -1925,7 +1925,7 @@ func TestClientsAPI_Templates(t *testing.T) {
 			},
 			expected: []*clients.Template{
 				{
-					Id:            "template_id",
+					ID:            "template_id",
 					Name:          "name",
 					PreviewURL:    "preview_url",
 					ScreenshotURL: "screenshot_url",

@@ -134,11 +134,11 @@ func (a *accountsAPI) PrimaryContact() (string, error) {
 
 func (a *accountsAPI) NewEmbeddedSession(session accounts.EmbeddedSession) (string, error) {
 	result := new(struct {
-		SessionUrl string
+		SessionURL string `json:"SessionUrl"`
 	})
 	err := a.client.Put(externalSessionPath, &result, session)
 	if err != nil {
 		return "", err
 	}
-	return result.SessionUrl, nil
+	return result.SessionURL, nil
 }

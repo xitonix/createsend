@@ -45,7 +45,7 @@ func TestAccountsAPI_Clients(t *testing.T) {
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`[{"ClientID":"id", "Name":"name"}]`)),
 			},
 			expected: []*accounts.Client{{
-				Id:   "id",
+				ID:   "id",
 				Name: "name",
 			}},
 		},
@@ -56,7 +56,7 @@ func TestAccountsAPI_Clients(t *testing.T) {
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`[{"ClientID":"id", "Name":"name"}]`)),
 			},
 			expected: []*accounts.Client{{
-				Id:   "id",
+				ID:   "id",
 				Name: "name",
 			}},
 			oAuthAuthentication: true,
@@ -921,14 +921,14 @@ func TestAccountsAPI_NewEmbeddedSession(t *testing.T) {
 			title: "successful execution",
 			response: &http.Response{
 				StatusCode: 200,
-				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"SessionUrl":"session_url"}`)),
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"SessionURL":"session_url"}`)),
 			},
 			input: accounts.EmbeddedSession{
 				EmailAddress: "e@d.com",
 				Chrome:       "chrome",
 				URL:          "url",
-				IntegratorId: "integration_id",
-				ClientId:     "client_id",
+				IntegratorID: "integration_id",
+				ClientID:     "client_id",
 			},
 			expected: "session_url",
 		},
@@ -936,14 +936,14 @@ func TestAccountsAPI_NewEmbeddedSession(t *testing.T) {
 			title: "oAuth authentication",
 			response: &http.Response{
 				StatusCode: 200,
-				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"SessionUrl":"session_url"}`)),
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"SessionURL":"session_url"}`)),
 			},
 			input: accounts.EmbeddedSession{
 				EmailAddress: "e@d.com",
 				Chrome:       "chrome",
 				URL:          "url",
-				IntegratorId: "integration_id",
-				ClientId:     "client_id",
+				IntegratorID: "integration_id",
+				ClientID:     "client_id",
 			},
 			expected:            "session_url",
 			oAuthAuthentication: true,

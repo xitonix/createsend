@@ -2,10 +2,10 @@ package clients
 
 // Segment represents a list segment.
 type Segment struct {
-	// Id segment id.
-	Id string `json:"SegmentID"`
+	// ID segment id.
+	ID string `json:"SegmentID"`
 	// Title segment title.
 	Title string
-	// ListId the Id of the list the segment belongs to.
-	ListId string `json:"ListID"`
+	// ListID the ID of the list the segment belongs to.
+	ListID string
 }

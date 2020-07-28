@@ -4,6 +4,7 @@
     - id: go-fmt
     - id: go-vet
     - id: go-lint
+    - id: go-critic
     - id: go-build
     - id: go-unit-tests
     - id: go-mod-tidy

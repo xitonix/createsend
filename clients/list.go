@@ -4,8 +4,8 @@ import "time"
 
 // List represents a list.
 type List struct {
-	// Id list id.
-	Id string `json:"ListID"`
+	// ID list id.
+	ID string `json:"ListID"`
 	// Name list name.
 	Name string
 }

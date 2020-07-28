@@ -40,7 +40,7 @@ func main() {
     }
     
     for _, client := range clients {
-        fmt.Printf("%s: %s\n", client.Id, client.Name)
+        fmt.Printf("%s: %s\n", client.ID, client.Name)
     }
 }
 ```

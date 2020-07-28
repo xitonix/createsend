@@ -7,8 +7,8 @@ import (
 
 // Campaign represents a Campaign.
 type Campaign struct {
-	// Id campaign id.
-	Id string
+	// ID campaign id.
+	ID string
 	// Name campaign name.
 	Name string
 	// From the sender.

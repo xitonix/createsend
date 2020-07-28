@@ -8,7 +8,7 @@ import (
 
 // SubscriberList represents a raw subscriber list.
 type SubscriberList struct {
-	// ListID list Id.
+	// ListID list ID.
 	ListID string
 	// ListName list name.
 	ListName string
@@ -31,7 +31,7 @@ func (s *SubscriberList) ToSubscriberList() (*clients.SubscriberList, error) {
 
 	return &clients.SubscriberList{
 		List: clients.List{
-			Id:   s.ListID,
+			ID:   s.ListID,
 			Name: s.ListName,
 		},
 		Subscriber: clients.Subscriber{

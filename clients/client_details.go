@@ -16,8 +16,8 @@ type ContactDetails struct {
 type ClientDetails struct {
 	// APIKey Client API key
 	APIKey string
-	// Id client id
-	Id string
+	// ID client id
+	ID string
 	// Company company name
 	Company string
 	// Country country
