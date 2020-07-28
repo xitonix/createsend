@@ -12,12 +12,14 @@ type result struct {
 	response *http.Response
 }
 
+// HTTPClientMock represents a mocked HTTP client.
 type HTTPClientMock struct {
 	options *Options
 	lock    sync.Mutex
 	calls   map[string]*result
 }
 
+// NewHTTPClientMock creates a new instance of a mocked HTTP client.
 func NewHTTPClientMock(options ...Option) *HTTPClientMock {
 	opts := defaultOptions()
 	for _, op := range options {
@@ -29,6 +31,7 @@ func NewHTTPClientMock(options ...Option) *HTTPClientMock {
 	}
 }
 
+// SetResponse sets the response you expect to be returned from the server once the specified path is hit.
 func (h *HTTPClientMock) SetResponse(path string, response *http.Response) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
@@ -41,6 +44,7 @@ func (h *HTTPClientMock) SetResponse(path string, response *http.Response) {
 	}
 }
 
+// Do sends an HTTP request to the mocked server.
 func (h *HTTPClientMock) Do(request *http.Request) (*http.Response, error) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
@@ -55,12 +59,10 @@ func (h *HTTPClientMock) Do(request *http.Request) (*http.Response, error) {
 	if h.options.forceToFail {
 		return nil, ErrDeliberate
 	}
-	if h.options.fail != nil && h.options.fail(call.count, request) {
-		return nil, ErrDeliberate
-	}
 	return call.response, nil
 }
 
+// Count returns number of times the specified path was hit.
 func (h *HTTPClientMock) Count(path string) int {
 	call, ok := h.calls[path]
 	if !ok {

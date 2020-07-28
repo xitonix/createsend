@@ -8,6 +8,7 @@ import (
 	"github.com/xitonix/createsend/clients"
 )
 
+// Campaign represents a raw Campaign.
 type Campaign struct {
 	FromName          string
 	FromEmail         string
@@ -19,12 +20,14 @@ type Campaign struct {
 	Name              string
 }
 
+// SentCampaign represent a raw sent campaign.
 type SentCampaign struct {
 	Campaign
 	SentDate        string
 	TotalRecipients int64
 }
 
+// ToSendCampaign converts the raw model to a new createsend model.
 func (c *SentCampaign) ToSendCampaign() (*clients.SentCampaign, error) {
 	if c == nil {
 		return nil, nil
@@ -51,6 +54,7 @@ func (c *SentCampaign) ToSendCampaign() (*clients.SentCampaign, error) {
 	}, nil
 }
 
+// ScheduledCampaign represents a raw scheduled campaign.
 type ScheduledCampaign struct {
 	Campaign
 	// DateCreated the timestamp when the Campaign was created.
@@ -61,6 +65,7 @@ type ScheduledCampaign struct {
 	ScheduledTimeZone string
 }
 
+// ToScheduledCampaign converts the raw model to a new createsend model.
 func (c *ScheduledCampaign) ToScheduledCampaign() (*clients.ScheduledCampaign, error) {
 	if c == nil {
 		return nil, nil
@@ -93,12 +98,14 @@ func (c *ScheduledCampaign) ToScheduledCampaign() (*clients.ScheduledCampaign, e
 	}, nil
 }
 
+// DraftCampaign represents a raw draft campaign.
 type DraftCampaign struct {
 	Campaign
 	// DateCreated the timestamp when the Campaign was created.
 	DateCreated string
 }
 
+// ToDraftCampaign converts the raw model to a new createsend model.
 func (c *DraftCampaign) ToDraftCampaign() (*clients.DraftCampaign, error) {
 	date, err := dateparse.ParseAny(c.DateCreated)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"github.com/xitonix/createsend/clients"
 )
 
+// BillingDetails represents a raw billing details type.
 type BillingDetails struct {
 	// Monthly plans
 	CurrentTier        string
@@ -28,6 +29,7 @@ type BillingDetails struct {
 	Currency   string
 }
 
+// ToClientBillingDetails converts the raw model to a new createsend model.
 func (b *BillingDetails) ToClientBillingDetails(pending *BillingDetails) *clients.BillingDetails {
 	if b == nil {
 		return nil

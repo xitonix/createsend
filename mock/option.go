@@ -2,17 +2,12 @@ package mock
 
 import "net/http"
 
-const (
-	DefaultRetryCount = 3
-)
-
-type CallFailurePredicate func(callCount int, request *http.Request) bool
-
+// Option represents an optional configuration function for mocked clients.
 type Option func(*Options)
 
+// Options mocked client configurations.
 type Options struct {
 	forceToFail bool
-	fail        CallFailurePredicate
 	callback    func(*http.Request)
 }
 
@@ -20,20 +15,16 @@ func defaultOptions() *Options {
 	return &Options{}
 }
 
+// ForceToFail if enabled, it forces the mocked HTTP requests to fail.
 func ForceToFail(force bool) Option {
 	return func(options *Options) {
 		options.forceToFail = force
 	}
 }
 
+// WhenCalled sets a callback which will be called once an HTTP request is being sent to the server.
 func WhenCalled(callback func(*http.Request)) Option {
 	return func(options *Options) {
 		options.callback = callback
-	}
-}
-
-func FailIf(fail CallFailurePredicate) Option {
-	return func(options *Options) {
-		options.fail = fail
 	}
 }

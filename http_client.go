@@ -2,6 +2,7 @@ package createsend
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -17,6 +18,7 @@ const (
 	httpsSchema             = "https://"
 )
 
+// HTTPClient is an interface for the internal HTTP client.
 type HTTPClient interface {
 	Do(request *http.Request) (*http.Response, error)
 }
@@ -25,9 +27,10 @@ type httpClient struct {
 	client  HTTPClient
 	auth    *authentication
 	baseURL *url.URL
+	ctx context.Context
 }
 
-func newHTTPClient(baseURL string, client HTTPClient, auth *authentication) (*httpClient, error) {
+func newHTTPClient(ctx context.Context, baseURL string, client HTTPClient, auth *authentication) (*httpClient, error) {
 	if client == nil {
 		return nil, newClientError(ErrCodeNilHTTPClient)
 	}
@@ -60,6 +63,7 @@ func newHTTPClient(baseURL string, client HTTPClient, auth *authentication) (*ht
 		client:  client,
 		auth:    auth,
 		baseURL: base,
+		ctx: ctx,
 	}, nil
 }
 
@@ -150,5 +154,5 @@ func (h *httpClient) newRequest(method, path string, body interface{}) (*http.Re
 		return nil, newWrappedClientError("Failed to create the web request", err, ErrCodeDataProcessing)
 	}
 
-	return request, nil
+	return request.WithContext(h.ctx), nil
 }

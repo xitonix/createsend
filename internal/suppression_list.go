@@ -39,6 +39,7 @@ type SuppressionList struct {
 	NumberOfPages int
 }
 
+// ToSuppressionList converts the raw model to a new createsend model.
 func (s *SuppressionList) ToSuppressionList() (*clients.SuppressionList, error) {
 	output := &clients.SuppressionList{
 		Entries:              make([]*clients.SuppressionDetails, len(s.Results)),

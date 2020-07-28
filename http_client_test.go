@@ -2,6 +2,7 @@ package createsend
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -39,7 +40,7 @@ func TestHeaders(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
 			httpClient := mock.NewHTTPClientMock()
-			client, err := newHTTPClient("https://base", httpClient, tC.auth)
+			client, err := newHTTPClient(context.Background(),"https://base", httpClient, tC.auth)
 			if err != nil {
 				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
 			}
@@ -107,7 +108,7 @@ func TestNewHTTPSEnforcement(t *testing.T) {
 				method: apiKeyAuthentication,
 				token:  "api_key",
 			}
-			client, err := newHTTPClient(tC.baseURL, mock.NewHTTPClientMock(), auth)
+			client, err := newHTTPClient(context.Background(), tC.baseURL, mock.NewHTTPClientMock(), auth)
 			if err != nil {
 				checkErrorType(t, err, false)
 			}
@@ -245,7 +246,7 @@ func TestNewHTTPClient(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
-			_, err := newHTTPClient(tC.baseURL, tC.client, tC.auth)
+			_, err := newHTTPClient(context.Background(), tC.baseURL, tC.client, tC.auth)
 			if !checkError(err, tC.expectedError) {
 				t.Errorf("Client Creation: Expected '%v' error, but received: '%v'", tC.expectedError, err)
 			}
@@ -302,7 +303,7 @@ func TestNewRequest(t *testing.T) {
 				token:  "api_key",
 				method: apiKeyAuthentication,
 			}
-			client, err := newHTTPClient(base, httpClient, auth)
+			client, err := newHTTPClient(context.Background(), base, httpClient, auth)
 			if err != nil {
 				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
 			}
@@ -387,7 +388,7 @@ func TestGetFullURL(t *testing.T) {
 				token:  "api_key",
 				method: apiKeyAuthentication,
 			}
-			client, err := newHTTPClient(base, httpClient, auth)
+			client, err := newHTTPClient(context.Background(), base, httpClient, auth)
 			if err != nil {
 				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
 			}
@@ -568,7 +569,7 @@ func TestGet(t *testing.T) {
 				method: apiKeyAuthentication,
 			}
 
-			client, err := newHTTPClient(base, httpClient, auth)
+			client, err := newHTTPClient(context.Background(), base, httpClient, auth)
 			if err != nil {
 				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
 			}
@@ -794,7 +795,7 @@ func TestPost(t *testing.T) {
 				method: apiKeyAuthentication,
 			}
 
-			client, err := newHTTPClient(base, httpClient, auth)
+			client, err := newHTTPClient(context.Background(), base, httpClient, auth)
 			if err != nil {
 				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
 			}
@@ -1020,7 +1021,7 @@ func TestPut(t *testing.T) {
 				method: apiKeyAuthentication,
 			}
 
-			client, err := newHTTPClient(base, httpClient, auth)
+			client, err := newHTTPClient(context.Background(), base, httpClient, auth)
 			if err != nil {
 				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
 			}
@@ -1164,7 +1165,7 @@ func TestDelete(t *testing.T) {
 				method: apiKeyAuthentication,
 			}
 
-			client, err := newHTTPClient(base, httpClient, auth)
+			client, err := newHTTPClient(context.Background(), base, httpClient, auth)
 			if err != nil {
 				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
 			}

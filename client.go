@@ -16,7 +16,7 @@ func New(options ...Option) (*Client, error) {
 		op(opts)
 	}
 
-	hc, err := newHTTPClient(opts.baseURL, opts.client, opts.auth)
+	hc, err := newHTTPClient(opts.ctx, opts.baseURL, opts.client, opts.auth)
 	if err != nil {
 		return nil, err
 	}
