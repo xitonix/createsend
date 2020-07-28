@@ -40,7 +40,7 @@ func TestHeaders(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.title, func(t *testing.T) {
 			httpClient := mock.NewHTTPClientMock()
-			client, err := newHTTPClient(context.Background(),"https://base", httpClient, tC.auth)
+			client, err := newHTTPClient(context.Background(), "https://base", httpClient, tC.auth)
 			if err != nil {
 				t.Errorf("Client Creation: Did not expect to receive an error, but received: '%s'", err)
 			}

@@ -9,11 +9,11 @@ import (
 // SubscriberList represents a raw subscriber list.
 type SubscriberList struct {
 	// ListID list Id.
-	ListID              string
+	ListID string
 	// ListName list name.
-	ListName            string
+	ListName string
 	// SubscriberState subscriber status.
-	SubscriberState     string
+	SubscriberState string
 	// DateSubscriberAdded date the subscriber was added to the list.
 	DateSubscriberAdded string
 }

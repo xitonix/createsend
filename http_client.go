@@ -27,7 +27,7 @@ type httpClient struct {
 	client  HTTPClient
 	auth    *authentication
 	baseURL *url.URL
-	ctx context.Context
+	ctx     context.Context
 }
 
 func newHTTPClient(ctx context.Context, baseURL string, client HTTPClient, auth *authentication) (*httpClient, error) {
@@ -63,7 +63,7 @@ func newHTTPClient(ctx context.Context, baseURL string, client HTTPClient, auth 
 		client:  client,
 		auth:    auth,
 		baseURL: base,
-		ctx: ctx,
+		ctx:     ctx,
 	}, nil
 }
 

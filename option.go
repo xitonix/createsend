@@ -25,7 +25,7 @@ type Options struct {
 	baseURL  string
 	accounts accounts.API
 	clients  clients.API
-	ctx context.Context
+	ctx      context.Context
 }
 
 func defaultOptions() *Options {

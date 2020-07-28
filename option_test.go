@@ -7,9 +7,9 @@ import (
 )
 
 func TestDefaultOptions(t *testing.T) {
-    ops := defaultOptions()
-    if ops.baseURL != DefaultBaseURL {
-    	t.Errorf("Expected base URL: %s, Actual: %s", DefaultBaseURL, ops.baseURL)
+	ops := defaultOptions()
+	if ops.baseURL != DefaultBaseURL {
+		t.Errorf("Expected base URL: %s, Actual: %s", DefaultBaseURL, ops.baseURL)
 	}
 
 	if ops.auth.method != undefinedAuthentication {
@@ -30,16 +30,16 @@ func TestDefaultOptions(t *testing.T) {
 }
 
 func TestWithContext(t *testing.T) {
-    testCases := []struct {
+	testCases := []struct {
 		title string
-		ctx context.Context
+		ctx   context.Context
 	}{
 		{
 			title: "setting the context to nil must use the background context",
 		},
 		{
 			title: "non empty context",
-			ctx: context.TODO(),
+			ctx:   context.TODO(),
 		},
 	}
 

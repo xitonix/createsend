@@ -1,9 +1,12 @@
 package clients
 
+// BillingMode billing mode.
 type BillingMode int8
 
 const (
+	// MonthlyBilling monthly billing.
 	MonthlyBilling BillingMode = iota + 1
+	// PAYGBilling Pay as you go billing.
 	PAYGBilling
 )
 

@@ -5,11 +5,13 @@ import (
 	"github.com/xitonix/createsend/clients"
 )
 
+// Client represents a client to access Campaign Monitor API.
 type Client struct {
 	accounts accounts.API
 	clients  clients.API
 }
 
+// New creates a new client.
 func New(options ...Option) (*Client, error) {
 	opts := defaultOptions()
 	for _, op := range options {
@@ -33,10 +35,12 @@ func New(options ...Option) (*Client, error) {
 	return client, nil
 }
 
+// Accounts accesses the Campaign Monitor accounts API.
 func (c *Client) Accounts() accounts.API {
 	return c.accounts
 }
 
+// Clients accesses the Campaign Monitor clients API.
 func (c *Client) Clients() clients.API {
 	return c.clients
 }
