@@ -45,4 +45,6 @@ type API interface {
 	SetMonthlyBilling(clientID string, rates MonthlyRates) error
 	// TransferCredits Transfers credits from your account to a client, or transfer credits from a client to your account.
 	TransferCredits(clientID string, request CreditTransferRequest) (*CreditTransferResult, error)
+	// Delete deletes an existing client from your account.
+	Delete(clientID string) error
 }

@@ -251,3 +251,8 @@ func (a *clientsAPI) TransferCredits(clientID string, request clients.CreditTran
 	}
 	return result, nil
 }
+
+func (a *clientsAPI) Delete(clientID string) error {
+	path := fmt.Sprintf("clients/%s.json", url.QueryEscape(clientID))
+	return a.client.Delete(path)
+}
