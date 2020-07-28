@@ -18,7 +18,7 @@ type BillingDetails struct {
 	Monthly *MonthlyBillingDetails
 	// PAYG is PAYG billing details of the Client is not on a monthly plan, nil otherwise.
 	PAYG *PayAsYouGoBillingDetails
-	// ClientPays returns true if the client pays for itself.
+	// ClientPays is true if the client pays for itself.
 	ClientPays bool
 	// Currency the current billing currency.
 	Currency string
@@ -28,7 +28,7 @@ type BillingDetails struct {
 type MonthlyBillingDetails struct {
 	// Tier monthly billing tier.
 	Tier string
-	// Scheme the current scheme (eg. Unlimited).
+	// Scheme the current scheme (eg. Unlimited, Basic, etc).
 	Scheme string
 	// Rate the current rate.
 	Rate float64
@@ -40,7 +40,7 @@ type MonthlyBillingDetails struct {
 
 // PayAsYouGoBillingDetails represents PAYG billing details if the client is on pay-as-you-go.
 type PayAsYouGoBillingDetails struct {
-	// CanPurchaseCredits returns true if the Client is allowed to purchase credit.
+	// CanPurchaseCredits is true if the Client is allowed to purchase credit.
 	CanPurchaseCredits bool
 	// Credits the number of Campaign Monitor credits.
 	Credits int64

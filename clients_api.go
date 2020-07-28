@@ -23,16 +23,16 @@ func newClientsAPI(client internal.Client) *clientsAPI {
 }
 
 func (a *clientsAPI) Create(details clients.BasicDetails) (string, error) {
-	var clientId string
-	err := a.client.Post(clientsPath, &clientId, details)
-	return strings.Trim(clientId, `"`), err
+	var clientID string
+	err := a.client.Post(clientsPath, &clientID, details)
+	return strings.Trim(clientID, `"`), err
 }
 
-func (a *clientsAPI) Get(clientId string) (*clients.ClientDetails, error) {
-	path := fmt.Sprintf("clients/%s.json", url.QueryEscape(clientId))
+func (a *clientsAPI) Get(clientID string) (*clients.ClientDetails, error) {
+	path := fmt.Sprintf("clients/%s.json", url.QueryEscape(clientID))
 
 	result := new(struct {
-		ApiKey       string
+		APIKey       string
 		BasicDetails struct {
 			ClientID     string
 			CompanyName  string
@@ -54,7 +54,7 @@ func (a *clientsAPI) Get(clientId string) (*clients.ClientDetails, error) {
 	}
 
 	clientDetails := &clients.ClientDetails{
-		APIKey:   result.ApiKey,
+		APIKey:   result.APIKey,
 		Id:       result.BasicDetails.ClientID,
 		Company:  result.BasicDetails.CompanyName,
 		Country:  result.BasicDetails.Country,
@@ -82,9 +82,9 @@ func (a *clientsAPI) Get(clientId string) (*clients.ClientDetails, error) {
 	return clientDetails, nil
 }
 
-func (a *clientsAPI) SentCampaigns(clientId string) ([]*clients.SentCampaign, error) {
+func (a *clientsAPI) SentCampaigns(clientID string) ([]*clients.SentCampaign, error) {
 	result := make([]*internal.SentCampaign, 0)
-	path := fmt.Sprintf("clients/%s/campaigns.json", url.QueryEscape(clientId))
+	path := fmt.Sprintf("clients/%s/campaigns.json", url.QueryEscape(clientID))
 	err := a.client.Get(path, &result)
 	if err != nil {
 		return nil, err
@@ -100,9 +100,9 @@ func (a *clientsAPI) SentCampaigns(clientId string) ([]*clients.SentCampaign, er
 	return campaigns, nil
 }
 
-func (a *clientsAPI) ScheduledCampaigns(clientId string) ([]*clients.ScheduledCampaign, error) {
+func (a *clientsAPI) ScheduledCampaigns(clientID string) ([]*clients.ScheduledCampaign, error) {
 	result := make([]*internal.ScheduledCampaign, 0)
-	path := fmt.Sprintf("clients/%s/scheduled.json", url.QueryEscape(clientId))
+	path := fmt.Sprintf("clients/%s/scheduled.json", url.QueryEscape(clientID))
 	err := a.client.Get(path, &result)
 	if err != nil {
 		return nil, err
@@ -118,9 +118,9 @@ func (a *clientsAPI) ScheduledCampaigns(clientId string) ([]*clients.ScheduledCa
 	return campaigns, nil
 }
 
-func (a *clientsAPI) DraftCampaigns(clientId string) ([]*clients.DraftCampaign, error) {
+func (a *clientsAPI) DraftCampaigns(clientID string) ([]*clients.DraftCampaign, error) {
 	result := make([]*internal.DraftCampaign, 0)
-	path := fmt.Sprintf("clients/%s/drafts.json", url.QueryEscape(clientId))
+	path := fmt.Sprintf("clients/%s/drafts.json", url.QueryEscape(clientID))
 	err := a.client.Get(path, &result)
 	if err != nil {
 		return nil, err
@@ -136,9 +136,9 @@ func (a *clientsAPI) DraftCampaigns(clientId string) ([]*clients.DraftCampaign, 
 	return campaigns, nil
 }
 
-func (a *clientsAPI) Lists(clientId string) ([]*clients.List, error) {
+func (a *clientsAPI) Lists(clientID string) ([]*clients.List, error) {
 	result := make([]*clients.List, 0)
-	path := fmt.Sprintf("clients/%s/lists.json", url.QueryEscape(clientId))
+	path := fmt.Sprintf("clients/%s/lists.json", url.QueryEscape(clientID))
 	err := a.client.Get(path, &result)
 	if err != nil {
 		return nil, err
@@ -146,9 +146,9 @@ func (a *clientsAPI) Lists(clientId string) ([]*clients.List, error) {
 	return result, nil
 }
 
-func (a *clientsAPI) ListsByEmailAddress(clientId, emailAddress string) ([]*clients.SubscriberList, error) {
+func (a *clientsAPI) ListsByEmailAddress(clientID, emailAddress string) ([]*clients.SubscriberList, error) {
 	result := make([]*internal.SubscriberList, 0)
-	path := fmt.Sprintf("clients/%s/listsforemail.json?email=%s", url.QueryEscape(clientId), url.QueryEscape(emailAddress))
+	path := fmt.Sprintf("clients/%s/listsforemail.json?email=%s", url.QueryEscape(clientID), url.QueryEscape(emailAddress))
 	err := a.client.Get(path, &result)
 	if err != nil {
 		return nil, err
@@ -164,9 +164,9 @@ func (a *clientsAPI) ListsByEmailAddress(clientId, emailAddress string) ([]*clie
 	return lists, nil
 }
 
-func (a *clientsAPI) Segments(clientId string) ([]*clients.Segment, error) {
+func (a *clientsAPI) Segments(clientID string) ([]*clients.Segment, error) {
 	result := make([]*clients.Segment, 0)
-	path := fmt.Sprintf("clients/%s/segments.json", url.QueryEscape(clientId))
+	path := fmt.Sprintf("clients/%s/segments.json", url.QueryEscape(clientID))
 	err := a.client.Get(path, &result)
 	if err != nil {
 		return nil, err
@@ -174,13 +174,13 @@ func (a *clientsAPI) Segments(clientId string) ([]*clients.Segment, error) {
 	return result, nil
 }
 
-func (a *clientsAPI) SuppressionList(clientId string,
+func (a *clientsAPI) SuppressionList(clientID string,
 	pageSize, page int,
 	orderBy order.SuppressionListField,
 	direction order.Direction) (*clients.SuppressionList, error) {
 
 	path := fmt.Sprintf("clients/%s/suppressionlist.json?page=%d&pagesize=%d&orderfield=%s&orderdirection=%s",
-		url.QueryEscape(clientId),
+		url.QueryEscape(clientID),
 		page,
 		pageSize,
 		url.QueryEscape(orderBy.String()),
@@ -200,26 +200,26 @@ func (a *clientsAPI) SuppressionList(clientId string,
 	return list, nil
 }
 
-func (a *clientsAPI) Suppress(clientId string, emails ...string) error {
+func (a *clientsAPI) Suppress(clientID string, emails ...string) error {
 	data := struct {
 		EmailAddresses []string
 	}{
 		EmailAddresses: emails,
 	}
-	path := fmt.Sprintf("clients/%s/suppress.json", url.QueryEscape(clientId))
+	path := fmt.Sprintf("clients/%s/suppress.json", url.QueryEscape(clientID))
 	return a.client.Post(path, nil, data)
 }
 
-func (a *clientsAPI) UnSuppress(clientId string, email string) error {
+func (a *clientsAPI) UnSuppress(clientID string, email string) error {
 	path := fmt.Sprintf("clients/%s/unsuppress.json?email=%s",
-		url.QueryEscape(clientId),
+		url.QueryEscape(clientID),
 		url.QueryEscape(email))
 	return a.client.Put(path, nil, nil)
 }
 
-func (a *clientsAPI) Templates(clientId string) ([]*clients.Template, error) {
+func (a *clientsAPI) Templates(clientID string) ([]*clients.Template, error) {
 	result := make([]*clients.Template, 0)
-	path := fmt.Sprintf("clients/%s/templates.json", url.QueryEscape(clientId))
+	path := fmt.Sprintf("clients/%s/templates.json", url.QueryEscape(clientID))
 	err := a.client.Get(path, &result)
 	if err != nil {
 		return nil, err
@@ -227,7 +227,17 @@ func (a *clientsAPI) Templates(clientId string) ([]*clients.Template, error) {
 	return result, nil
 }
 
-func (a *clientsAPI) Update(clientId string, details clients.BasicDetails) error {
-	path := fmt.Sprintf("clients/%s/setbasics.json", url.QueryEscape(clientId))
+func (a *clientsAPI) Update(clientID string, details clients.BasicDetails) error {
+	path := fmt.Sprintf("clients/%s/setbasics.json", url.QueryEscape(clientID))
 	return a.client.Put(path, nil, details)
+}
+
+func (a *clientsAPI) SetPAYGBilling(clientID string, rates clients.PAYGRates) error {
+	path := fmt.Sprintf("clients/%s/setpaygbilling.json", url.QueryEscape(clientID))
+	return a.client.Put(path, nil, rates)
+}
+
+func (a *clientsAPI) SetMonthlyBilling(clientID string, rates clients.MonthlyRates) error {
+	path := fmt.Sprintf("clients/%s/setmonthlybilling.json", url.QueryEscape(clientID))
+	return a.client.Put(path, nil, rates)
 }

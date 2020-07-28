@@ -106,7 +106,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			response: &http.Response{
 				StatusCode: 200,
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
-				"ApiKey": "api_key",
+				"APIKey": "api_key",
 				"BasicDetails": {
 					"ClientID": "client_id",
 					"CompanyName": "company_name",
@@ -168,7 +168,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			response: &http.Response{
 				StatusCode: 200,
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
-				"ApiKey": "api_key",
+				"APIKey": "api_key",
 				"BasicDetails": {
 					"ClientID": "client_id",
 					"CompanyName": "company_name",
@@ -233,7 +233,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			response: &http.Response{
 				StatusCode: 200,
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
-				"ApiKey": "api_key",
+				"APIKey": "api_key",
 				"BasicDetails": {
 					"ClientID": "client_id",
 					"CompanyName": "company_name",
@@ -322,7 +322,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			response: &http.Response{
 				StatusCode: 200,
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
-				"ApiKey": "api_key",
+				"APIKey": "api_key",
 				"BasicDetails": {
 					"ClientID": "client_id",
 					"CompanyName": "company_name",
@@ -414,7 +414,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			response: &http.Response{
 				StatusCode: 200,
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
-				"ApiKey": "api_key",
+				"APIKey": "api_key",
 				"BasicDetails": {
 					"ClientID": "client_id",
 					"CompanyName": "company_name",
@@ -440,7 +440,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			response: &http.Response{
 				StatusCode: 200,
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
-				"ApiKey": "api_key",
+				"APIKey": "api_key",
 				"BasicDetails": {
 					"ClientID": "client_id",
 					"CompanyName": "company_name",
@@ -471,7 +471,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			response: &http.Response{
 				StatusCode: 200,
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
-				"ApiKey": "api_key",
+				"APIKey": "api_key",
 				"BasicDetails": {
 					"ClientID": "client_id",
 					"CompanyName": "company_name",
@@ -502,7 +502,7 @@ func TestClientsAPI_Get(t *testing.T) {
 			response: &http.Response{
 				StatusCode: 200,
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
-				"ApiKey": "api_key",
+				"APIKey": "api_key",
 				"BasicDetails": {
 					"ClientID": "client_id",
 					"CompanyName": "company_name",
@@ -2011,6 +2011,114 @@ func TestClientsAPI_Update(t *testing.T) {
 			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
 			httpClient.SetResponse("clients/client_id/setbasics.json", tC.response)
 			err := client.Clients().Update("client_id", clients.BasicDetails{})
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+		})
+	}
+}
+
+func TestClientsAPI_SetPaygBilling(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "receiving 200 from the server means success",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+		},
+		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/setpaygbilling.json", tC.response)
+			err := client.Clients().SetPAYGBilling("client_id", clients.PAYGRates{})
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+		})
+	}
+}
+
+func TestClientsAPI_SetMonthlyBilling(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "receiving 200 from the server means success",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+		},
+		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/setmonthlybilling.json", tC.response)
+			err := client.Clients().SetMonthlyBilling("client_id", clients.MonthlyRates{})
 			if err != nil {
 				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
