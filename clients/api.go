@@ -47,4 +47,14 @@ type API interface {
 	TransferCredits(clientID string, request CreditTransferRequest) (*CreditTransferResult, error)
 	// Delete deletes an existing client from your account.
 	Delete(clientID string) error
+	// AddPerson adds a new person to the client.
+	AddPerson(clientID string, person Person) (string, error)
+	// UpdatePerson updates an existing person.
+	//
+	// The emailAddress argument is the person's old email address.
+	UpdatePerson(clientID string, emailAddress string, person Person) (string, error)
+	// People returns a list of all people associated with the client excluding account administrators.
+	People(clientID string) ([]*PersonDetails, error)
+	// Person returns the details of a single person associated with the client.
+	Person(clientID string, emailAddress string) (*PersonDetails, error)
 }

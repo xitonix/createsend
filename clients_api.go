@@ -256,3 +256,47 @@ func (a *clientsAPI) Delete(clientID string) error {
 	path := fmt.Sprintf("clients/%s.json", url.QueryEscape(clientID))
 	return a.client.Delete(path)
 }
+
+func (a *clientsAPI) AddPerson(clientID string, person clients.Person) (string, error) {
+	path := fmt.Sprintf("clients/%s/people.json", url.QueryEscape(clientID))
+	result := new(struct {
+		EmailAddress string
+	})
+	err := a.client.Post(path, &result, person)
+	if err != nil {
+		return "", err
+	}
+	return result.EmailAddress, nil
+}
+
+func (a *clientsAPI) UpdatePerson(clientID string, emailAddress string, person clients.Person) (string, error) {
+	path := fmt.Sprintf("clients/%s/people.json?email=%s", url.QueryEscape(clientID), url.QueryEscape(emailAddress))
+	result := new(struct {
+		EmailAddress string
+	})
+	err := a.client.Put(path, &result, person)
+	if err != nil {
+		return "", err
+	}
+	return result.EmailAddress, nil
+}
+
+func (a *clientsAPI) People(clientID string) ([]*clients.PersonDetails, error) {
+	result := make([]*clients.PersonDetails, 0)
+	path := fmt.Sprintf("clients/%s/people.json", url.QueryEscape(clientID))
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (a *clientsAPI) Person(clientID string, emailAddress string) (*clients.PersonDetails, error) {
+	var result *clients.PersonDetails
+	path := fmt.Sprintf("clients/%s/people.json?email=%s", url.QueryEscape(clientID), url.QueryEscape(emailAddress))
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

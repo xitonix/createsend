@@ -2265,3 +2265,366 @@ func TestClientsAPI_Delete(t *testing.T) {
 		})
 	}
 }
+
+func TestClientsAPI_AddPerson(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		oAuthAuthentication  bool
+		expected             string
+	}{
+		{
+			title: "empty JSON response",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			expected: "",
+		},
+		{
+			title: "empty server response",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: "",
+		},
+		{
+			title: "non empty server response",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"EmailAddress":"e@d.com"}`)),
+			},
+			expected: "e@d.com",
+		},
+		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"EmailAddress":"e@d.com"}`)),
+			},
+			expected:            "e@d.com",
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/people.json", tC.response)
+			actual, err := client.Clients().AddPerson("client_id", clients.Person{})
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestClientsAPI_UpdatePerson(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		oAuthAuthentication  bool
+		expected             string
+	}{
+		{
+			title: "empty JSON response",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			expected: "",
+		},
+		{
+			title: "empty server response",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: "",
+		},
+		{
+			title: "non empty server response",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"EmailAddress":"e@d.com"}`)),
+			},
+			expected: "e@d.com",
+		},
+		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"EmailAddress":"e@d.com"}`)),
+			},
+			expected:            "e@d.com",
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/people.json", tC.response)
+			actual, err := client.Clients().UpdatePerson("client_id", "e@d.com", clients.Person{})
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestClientsAPI_People(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expected             []*clients.PersonDetails
+		expectedError        error
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "no persons",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
+			},
+			expected: []*clients.PersonDetails{},
+		},
+		{
+			title: "no persons and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: []*clients.PersonDetails{},
+		},
+		{
+			title: "client with people",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"EmailAddress": "e@d.com",
+					"Name":         "name",
+					"AccessLevel":  10,
+					"Status": "status"
+    			}
+			]`)),
+			},
+			expected: []*clients.PersonDetails{
+				{
+					PersonBasicDetails: clients.PersonBasicDetails{
+						EmailAddress: "e@d.com",
+						Name:         "name",
+						AccessLevel:  10,
+					},
+					Status: "status",
+				},
+			},
+		},
+		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+				{
+					"EmailAddress": "e@d.com",
+					"Name":         "name",
+					"AccessLevel":  10,
+					"Status": "status"
+    			}
+			]`)),
+			},
+			expected: []*clients.PersonDetails{
+				{
+					PersonBasicDetails: clients.PersonBasicDetails{
+						EmailAddress: "e@d.com",
+						Name:         "name",
+						AccessLevel:  10,
+					},
+					Status: "status",
+				},
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/people.json", tC.response)
+			actual, err := client.Clients().People("client_id")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestClientsAPI_Person(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expected             *clients.PersonDetails
+		expectedError        error
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "no person",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			expected: &clients.PersonDetails{},
+		},
+		{
+			title: "no person and empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: nil,
+		},
+		{
+			title: "person found",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`
+				{
+					"EmailAddress": "e@d.com",
+					"Name":         "name",
+					"AccessLevel":  10,
+					"Status": "status"
+    			}
+			`)),
+			},
+			expected: &clients.PersonDetails{
+				PersonBasicDetails: clients.PersonBasicDetails{
+					EmailAddress: "e@d.com",
+					Name:         "name",
+					AccessLevel:  10,
+				},
+				Status: "status",
+			},
+		},
+		{
+			title: "oAuth authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`
+				{
+					"EmailAddress": "e@d.com",
+					"Name":         "name",
+					"AccessLevel":  10,
+					"Status": "status"
+    			}
+			`)),
+			},
+			expected: &clients.PersonDetails{
+				PersonBasicDetails: clients.PersonBasicDetails{
+					EmailAddress: "e@d.com",
+					Name:         "name",
+					AccessLevel:  10,
+				},
+				Status: "status",
+			},
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("clients/client_id/people.json", tC.response)
+			actual, err := client.Clients().Person("client_id", "e@d.com")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
