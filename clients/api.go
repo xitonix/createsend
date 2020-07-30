@@ -59,4 +59,8 @@ type API interface {
 	Person(clientID string, emailAddress string) (*PersonDetails, error)
 	// DeletePerson changes the status of an active person to a deleted person.
 	DeletePerson(clientID string, emailAddress string) error
+	// SetPrimaryContact sets the primary contact for the client to be the person with the specified email address.
+	SetPrimaryContact(clientID string, emailAddress string) (string, error)
+	// PrimaryContact returns the email address of the person who is selected as the primary contact for this client.
+	PrimaryContact(clientID string) (string, error)
 }

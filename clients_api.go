@@ -305,3 +305,27 @@ func (a *clientsAPI) DeletePerson(clientID string, emailAddress string) error {
 	path := fmt.Sprintf("clients/%s/people.json?email=%s", url.QueryEscape(clientID), url.QueryEscape(emailAddress))
 	return a.client.Delete(path)
 }
+
+func (a *clientsAPI) SetPrimaryContact(clientID string, emailAddress string) (string, error) {
+	path := fmt.Sprintf("clients/%s/primarycontact.json?email=%s", url.QueryEscape(clientID), url.QueryEscape(emailAddress))
+	result := new(struct {
+		EmailAddress string
+	})
+	err := a.client.Put(path, &result, nil)
+	if err != nil {
+		return "", err
+	}
+	return result.EmailAddress, nil
+}
+
+func (a *clientsAPI) PrimaryContact(clientID string) (string, error) {
+	path := fmt.Sprintf("clients/%s/primarycontact.json", url.QueryEscape(clientID))
+	result := new(struct {
+		EmailAddress string
+	})
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return "", err
+	}
+	return result.EmailAddress, nil
+}
