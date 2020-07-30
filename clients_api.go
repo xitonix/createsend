@@ -300,3 +300,8 @@ func (a *clientsAPI) Person(clientID string, emailAddress string) (*clients.Pers
 	}
 	return result, nil
 }
+
+func (a *clientsAPI) DeletePerson(clientID string, emailAddress string) error {
+	path := fmt.Sprintf("clients/%s/people.json?email=%s", url.QueryEscape(clientID), url.QueryEscape(emailAddress))
+	return a.client.Delete(path)
+}

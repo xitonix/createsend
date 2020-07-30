@@ -57,4 +57,6 @@ type API interface {
 	People(clientID string) ([]*PersonDetails, error)
 	// Person returns the details of a single person associated with the client.
 	Person(clientID string, emailAddress string) (*PersonDetails, error)
+	// DeletePerson changes the status of an active person to a deleted person.
+	DeletePerson(clientID string, emailAddress string) error
 }
