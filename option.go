@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/xitonix/createsend/accounts"
+	"github.com/xitonix/createsend/campaigns"
 	"github.com/xitonix/createsend/clients"
 )
 
@@ -20,12 +21,13 @@ type Option func(*Options)
 
 // Options client configurations.
 type Options struct {
-	client   HTTPClient
-	auth     *authentication
-	baseURL  string
-	accounts accounts.API
-	clients  clients.API
-	ctx      context.Context
+	client    HTTPClient
+	auth      *authentication
+	baseURL   string
+	accounts  accounts.API
+	clients   clients.API
+	campaigns campaigns.API
+	ctx       context.Context
 }
 
 func defaultOptions() *Options {
@@ -38,6 +40,15 @@ func defaultOptions() *Options {
 			Timeout: 5 * time.Second,
 		},
 		ctx: context.Background(),
+	}
+}
+
+// WithCampaignsAPI overrides the internal object for accessing Campaign API.
+//
+// You can override the API to mock out Campaign API methods altogether.
+func WithCampaignsAPI(api campaigns.API) Option {
+	return func(options *Options) {
+		options.campaigns = api
 	}
 }
 

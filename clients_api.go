@@ -3,7 +3,6 @@ package createsend
 import (
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/xitonix/createsend/clients"
 	"github.com/xitonix/createsend/internal"
@@ -25,7 +24,7 @@ func newClientsAPI(client internal.Client) *clientsAPI {
 func (a *clientsAPI) Create(details clients.BasicDetails) (string, error) {
 	var clientID string
 	err := a.client.Post(clientsPath, &clientID, details)
-	return strings.Trim(clientID, `"`), err
+	return clientID, err
 }
 
 func (a *clientsAPI) Get(clientID string) (*clients.ClientDetails, error) {

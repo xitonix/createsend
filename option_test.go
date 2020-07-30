@@ -55,6 +55,15 @@ func TestWithContext(t *testing.T) {
 	}
 }
 
+func TestWithCampaignsAPI(t *testing.T) {
+	ops := defaultOptions()
+	option := WithCampaignsAPI(&campaignsAPI{})
+	option(ops)
+	if ops.campaigns == nil {
+		t.Error("Campaigns API was nil")
+	}
+}
+
 func TestWithClientsAPI(t *testing.T) {
 	ops := defaultOptions()
 	option := WithClientsAPI(&clientsAPI{})
