@@ -22,4 +22,6 @@ type API interface {
 	SendAt(draftCampaignID string, at time.Time, confirmationEmails ...string) error
 	// SendPreview sends a preview of a draft campaign to a number of email addresses you specify.
 	SendPreview(draftCampaignID string, recipients ...string) error
+	// Summary returns a basic summary of the results for a sent campaign.
+	Summary(campaignID string) (*Summary, error)
 }

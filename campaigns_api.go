@@ -56,3 +56,13 @@ func (a *campaignsAPI) SendPreview(draftCampaignID string, recipients ...string)
 	path := fmt.Sprintf("campaigns/%s/sendpreview.json", url.QueryEscape(draftCampaignID))
 	return a.client.Post(path, nil, request)
 }
+
+func (a *campaignsAPI) Summary(campaignID string) (*campaigns.Summary, error) {
+	path := fmt.Sprintf("campaigns/%s/summary.json", url.QueryEscape(campaignID))
+	var result *campaigns.Summary
+	err := a.client.Get(path, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
