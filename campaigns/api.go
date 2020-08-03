@@ -20,4 +20,6 @@ type API interface {
 	//
 	// The send date should be in the client's timezone.
 	SendAt(draftCampaignID string, at time.Time, confirmationEmails ...string) error
+	// SendPreview sends a preview of a draft campaign to a number of email addresses you specify.
+	SendPreview(draftCampaignID string, recipients ...string) error
 }

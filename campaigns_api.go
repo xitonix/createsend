@@ -46,3 +46,13 @@ func (a *campaignsAPI) SendAt(draftCampaignID string, at time.Time, confirmation
 	path := fmt.Sprintf("campaigns/%s/send.json", url.QueryEscape(draftCampaignID))
 	return a.client.Post(path, nil, request)
 }
+
+func (a *campaignsAPI) SendPreview(draftCampaignID string, recipients ...string) error {
+	request := struct {
+		PreviewRecipients []string
+	}{
+		PreviewRecipients: recipients,
+	}
+	path := fmt.Sprintf("campaigns/%s/sendpreview.json", url.QueryEscape(draftCampaignID))
+	return a.client.Post(path, nil, request)
+}
