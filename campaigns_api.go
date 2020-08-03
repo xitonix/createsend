@@ -3,6 +3,8 @@ package createsend
 import (
 	"fmt"
 	"net/url"
+	"strings"
+	"time"
 
 	"github.com/xitonix/createsend/campaigns"
 	"github.com/xitonix/createsend/internal"
@@ -24,4 +26,23 @@ func (a *campaignsAPI) CreateDraft(clientID string, campaign campaigns.Draft) (s
 		return "", err
 	}
 	return result, nil
+}
+
+func (a *campaignsAPI) Send(draftCampaignID string, confirmationEmails ...string) error {
+	return a.SendAt(draftCampaignID, time.Time{}, confirmationEmails...)
+}
+
+func (a *campaignsAPI) SendAt(draftCampaignID string, at time.Time, confirmationEmails ...string) error {
+	request := struct {
+		ConfirmationEmail string
+		SendDate          string
+	}{
+		ConfirmationEmail: strings.Join(confirmationEmails, ","),
+		SendDate:          "Immediately",
+	}
+	if !at.IsZero() {
+		request.SendDate = at.Format("2006-01-02 15:04")
+	}
+	path := fmt.Sprintf("campaigns/%s/send.json", url.QueryEscape(draftCampaignID))
+	return a.client.Post(path, nil, request)
 }
