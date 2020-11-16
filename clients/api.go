@@ -1,6 +1,9 @@
 package clients
 
-import "github.com/xitonix/createsend/order"
+import (
+	"github.com/xitonix/createsend/common"
+	"github.com/xitonix/createsend/order"
+)
 
 // API is an interface that wraps client related operations.
 //
@@ -15,11 +18,11 @@ type API interface {
 	// Get returns the complete details for a client including their API key, access level, contact details and billing settings.
 	Get(clientID string) (*ClientDetails, error)
 	// SentCampaign returns a list of all sent campaigns for a client.
-	SentCampaigns(clientID string) ([]*SentCampaign, error)
+	SentCampaigns(clientID string) ([]*common.SentCampaign, error)
 	// ScheduledCampaigns returns all currently scheduled campaigns for a client.
-	ScheduledCampaigns(clientID string) ([]*ScheduledCampaign, error)
+	ScheduledCampaigns(clientID string) ([]*common.ScheduledCampaign, error)
 	// DraftCampaigns returns all draft campaigns belonging to a client.
-	DraftCampaigns(clientID string) ([]*DraftCampaign, error)
+	DraftCampaigns(clientID string) ([]*common.DraftCampaign, error)
 	// Lists returns all the subscriber lists that belong to a client.
 	Lists(clientID string) ([]*List, error)
 	// ListsByEmailAddress returns all the subscriber lists across the client, to which an email address is subscribed.

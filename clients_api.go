@@ -2,6 +2,7 @@ package createsend
 
 import (
 	"fmt"
+	"github.com/xitonix/createsend/common"
 	"net/url"
 	"strings"
 
@@ -82,14 +83,14 @@ func (a *clientsAPI) Get(clientID string) (*clients.ClientDetails, error) {
 	return clientDetails, nil
 }
 
-func (a *clientsAPI) SentCampaigns(clientID string) ([]*clients.SentCampaign, error) {
+func (a *clientsAPI) SentCampaigns(clientID string) ([]*common.SentCampaign, error) {
 	result := make([]*internal.SentCampaign, 0)
 	path := fmt.Sprintf("clients/%s/campaigns.json", url.QueryEscape(clientID))
 	err := a.client.Get(path, &result)
 	if err != nil {
 		return nil, err
 	}
-	campaigns := make([]*clients.SentCampaign, len(result))
+	campaigns := make([]*common.SentCampaign, len(result))
 	for i, c := range result {
 		cm, err := c.ToSendCampaign()
 		if err != nil {
@@ -100,14 +101,14 @@ func (a *clientsAPI) SentCampaigns(clientID string) ([]*clients.SentCampaign, er
 	return campaigns, nil
 }
 
-func (a *clientsAPI) ScheduledCampaigns(clientID string) ([]*clients.ScheduledCampaign, error) {
+func (a *clientsAPI) ScheduledCampaigns(clientID string) ([]*common.ScheduledCampaign, error) {
 	result := make([]*internal.ScheduledCampaign, 0)
 	path := fmt.Sprintf("clients/%s/scheduled.json", url.QueryEscape(clientID))
 	err := a.client.Get(path, &result)
 	if err != nil {
 		return nil, err
 	}
-	campaigns := make([]*clients.ScheduledCampaign, len(result))
+	campaigns := make([]*common.ScheduledCampaign, len(result))
 	for i, c := range result {
 		cm, err := c.ToScheduledCampaign()
 		if err != nil {
@@ -118,14 +119,14 @@ func (a *clientsAPI) ScheduledCampaigns(clientID string) ([]*clients.ScheduledCa
 	return campaigns, nil
 }
 
-func (a *clientsAPI) DraftCampaigns(clientID string) ([]*clients.DraftCampaign, error) {
+func (a *clientsAPI) DraftCampaigns(clientID string) ([]*common.DraftCampaign, error) {
 	result := make([]*internal.DraftCampaign, 0)
 	path := fmt.Sprintf("clients/%s/drafts.json", url.QueryEscape(clientID))
 	err := a.client.Get(path, &result)
 	if err != nil {
 		return nil, err
 	}
-	campaigns := make([]*clients.DraftCampaign, len(result))
+	campaigns := make([]*common.DraftCampaign, len(result))
 	for i, c := range result {
 		cm, err := c.ToDraftCampaign()
 		if err != nil {
