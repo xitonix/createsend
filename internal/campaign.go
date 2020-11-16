@@ -1,10 +1,11 @@
 package internal
 
 import (
-	"github.com/xitonix/createsend/common"
 	"net/mail"
 
 	"github.com/araddon/dateparse"
+
+	"github.com/xitonix/createsend/clients"
 )
 
 // Campaign represents a raw Campaign.
@@ -27,7 +28,7 @@ type SentCampaign struct {
 }
 
 // ToSendCampaign converts the raw model to a new createsend model.
-func (c *SentCampaign) ToSendCampaign() (*common.SentCampaign, error) {
+func (c *SentCampaign) ToSendCampaign() (*clients.SentCampaign, error) {
 	if c == nil {
 		return nil, nil
 	}
@@ -35,8 +36,8 @@ func (c *SentCampaign) ToSendCampaign() (*common.SentCampaign, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &common.SentCampaign{
-		Campaign: common.Campaign{
+	return &clients.SentCampaign{
+		Campaign: clients.Campaign{
 			ID:   c.CampaignID,
 			Name: c.Name,
 			From: mail.Address{
@@ -65,7 +66,7 @@ type ScheduledCampaign struct {
 }
 
 // ToScheduledCampaign converts the raw model to a new createsend model.
-func (c *ScheduledCampaign) ToScheduledCampaign() (*common.ScheduledCampaign, error) {
+func (c *ScheduledCampaign) ToScheduledCampaign() (*clients.ScheduledCampaign, error) {
 	if c == nil {
 		return nil, nil
 	}
@@ -78,8 +79,8 @@ func (c *ScheduledCampaign) ToScheduledCampaign() (*common.ScheduledCampaign, er
 	if err != nil {
 		return nil, err
 	}
-	return &common.ScheduledCampaign{
-		Campaign: common.Campaign{
+	return &clients.ScheduledCampaign{
+		Campaign: clients.Campaign{
 			ID:   c.CampaignID,
 			Name: c.Name,
 			From: mail.Address{
@@ -105,13 +106,13 @@ type DraftCampaign struct {
 }
 
 // ToDraftCampaign converts the raw model to a new createsend model.
-func (c *DraftCampaign) ToDraftCampaign() (*common.DraftCampaign, error) {
+func (c *DraftCampaign) ToDraftCampaign() (*clients.DraftCampaign, error) {
 	date, err := dateparse.ParseAny(c.DateCreated)
 	if err != nil {
 		return nil, err
 	}
-	return &common.DraftCampaign{
-		Campaign: common.Campaign{
+	return &clients.DraftCampaign{
+		Campaign: clients.Campaign{
 			ID:   c.CampaignID,
 			Name: c.Name,
 			From: mail.Address{

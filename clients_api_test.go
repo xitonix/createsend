@@ -2,7 +2,6 @@ package createsend
 
 import (
 	"bytes"
-	"github.com/xitonix/createsend/common"
 	"io/ioutil"
 	"net/http"
 	"net/mail"
@@ -582,7 +581,7 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
 		title                 string
 		forceHTTPClientError  bool
 		response              *http.Response
-		expected              []*common.SentCampaign
+		expected              []*clients.SentCampaign
 		expectedError         error
 		oAuthAuthentication   bool
 		expectClientSideError bool
@@ -593,7 +592,7 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
 			},
-			expected: []*common.SentCampaign{},
+			expected: []*clients.SentCampaign{},
 		},
 		{
 			title: "no sent campaigns and empty server response body",
@@ -601,7 +600,7 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
-			expected: []*common.SentCampaign{},
+			expected: []*clients.SentCampaign{},
 		},
 		{
 			title: "client with campaigns",
@@ -622,9 +621,9 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
     			}
 			]`)),
 			},
-			expected: []*common.SentCampaign{
+			expected: []*clients.SentCampaign{
 				{
-					Campaign: common.Campaign{
+					Campaign: clients.Campaign{
 						ID:   "id",
 						Name: "name",
 						From: mail.Address{
@@ -660,9 +659,9 @@ func TestClientsAPI_SentCampaigns(t *testing.T) {
     			}
 			]`)),
 			},
-			expected: []*common.SentCampaign{
+			expected: []*clients.SentCampaign{
 				{
-					Campaign: common.Campaign{
+					Campaign: clients.Campaign{
 						ID:   "id",
 						Name: "name",
 						From: mail.Address{
@@ -745,7 +744,7 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
 		title                 string
 		forceHTTPClientError  bool
 		response              *http.Response
-		expected              []*common.ScheduledCampaign
+		expected              []*clients.ScheduledCampaign
 		expectedError         error
 		oAuthAuthentication   bool
 		expectClientSideError bool
@@ -756,7 +755,7 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
 			},
-			expected: []*common.ScheduledCampaign{},
+			expected: []*clients.ScheduledCampaign{},
 		},
 		{
 			title: "no campaigns and empty server response body",
@@ -764,7 +763,7 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
-			expected: []*common.ScheduledCampaign{},
+			expected: []*clients.ScheduledCampaign{},
 		},
 		{
 			title: "client with campaigns",
@@ -786,9 +785,9 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
     			}
 			]`)),
 			},
-			expected: []*common.ScheduledCampaign{
+			expected: []*clients.ScheduledCampaign{
 				{
-					Campaign: common.Campaign{
+					Campaign: clients.Campaign{
 						ID:   "id",
 						Name: "name",
 						From: mail.Address{
@@ -874,9 +873,9 @@ func TestClientsAPI_ScheduledCampaigns(t *testing.T) {
     			}
 			]`)),
 			},
-			expected: []*common.ScheduledCampaign{
+			expected: []*clients.ScheduledCampaign{
 				{
-					Campaign: common.Campaign{
+					Campaign: clients.Campaign{
 						ID:   "id",
 						Name: "name",
 						From: mail.Address{
@@ -936,7 +935,7 @@ func TestClientsAPI_DraftCampaigns(t *testing.T) {
 		forceHTTPClientError  bool
 		expectClientSideError bool
 		response              *http.Response
-		expected              []*common.DraftCampaign
+		expected              []*clients.DraftCampaign
 		expectedError         error
 		oAuthAuthentication   bool
 	}{
@@ -946,7 +945,7 @@ func TestClientsAPI_DraftCampaigns(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
 			},
-			expected: []*common.DraftCampaign{},
+			expected: []*clients.DraftCampaign{},
 		},
 		{
 			title: "no campaigns and empty server response body",
@@ -954,7 +953,7 @@ func TestClientsAPI_DraftCampaigns(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
-			expected: []*common.DraftCampaign{},
+			expected: []*clients.DraftCampaign{},
 		},
 		{
 			title: "client with campaigns",
@@ -974,9 +973,9 @@ func TestClientsAPI_DraftCampaigns(t *testing.T) {
     			}
 			]`)),
 			},
-			expected: []*common.DraftCampaign{
+			expected: []*clients.DraftCampaign{
 				{
-					Campaign: common.Campaign{
+					Campaign: clients.Campaign{
 						ID:   "id",
 						Name: "name",
 						From: mail.Address{
@@ -1032,9 +1031,9 @@ func TestClientsAPI_DraftCampaigns(t *testing.T) {
     			}
 			]`)),
 			},
-			expected: []*common.DraftCampaign{
+			expected: []*clients.DraftCampaign{
 				{
-					Campaign: common.Campaign{
+					Campaign: clients.Campaign{
 						ID:   "id",
 						Name: "name",
 						From: mail.Address{
