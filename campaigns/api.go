@@ -90,11 +90,6 @@ type ListsAndSegments struct {
 	Segments []Segment
 }
 
-type Result struct {
-	EmailAddress string
-	ListID       string
-}
-
 type ListRequestDetails struct {
 	ResultsOrderedBy     orderfield.OrderField
 	OrderDirection       order.Direction
@@ -106,38 +101,42 @@ type ListRequestDetails struct {
 }
 
 type Recipients struct {
-	Results []Result
+	Results []struct {
+		EmailAddress string
+		ListID       string
+	}
 	ListRequestDetails
 }
 
 type Bounces struct {
 	Results []struct {
-		Result
-		BounceType string
-		Date       time.Time
-		Reason     string
+		EmailAddress string
+		ListID       string
+		BounceType   string
+		Date         time.Time
+		Reason       string
 	}
 	ListRequestDetails
 }
 
 type CampaignRecipientActions struct {
 	Results []struct {
-		Result
-		Date        time.Time
-		IPAddress   string
-		Latitude    float64
-		Longitude   float64
-		City        string
-		Region      string
-		CountryCode string
-		CountryName string
+		EmailAddress string
+		ListID       string
+		Date         time.Time
+		IPAddress    string
+		Latitude     float64
+		Longitude    float64
+		City         string
+		Region       string
+		CountryCode  string
+		CountryName  string
 	}
 	ListRequestDetails
 }
 
 type Unsubscribes struct {
 	Results []struct {
-		Result
 		EmailAddress string
 		ListID       string
 		Date         time.Time
@@ -148,8 +147,9 @@ type Unsubscribes struct {
 
 type SpamComplaints struct {
 	Results []struct {
-		Result
-		Date time.Time
+		EmailAddress string
+		ListID       string
+		Date         CmTime
 	}
 	ListRequestDetails
 }
