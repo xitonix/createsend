@@ -10,7 +10,7 @@
 
 Campaign Monitor API wrapper in Go
 
-### Installation
+## Installation
 
 ```shell script
 go get github.com/xitonix/createsend
@@ -53,3 +53,7 @@ if err != nil {
   log.Fatal(err)
 }
 ```
+
+## Contribution Guideline
+
+The guideline can be found [here](https://github.com/xitonix/createsend/blob/master/CONTRIBUTING.md). Thank you 🥇
