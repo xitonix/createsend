@@ -146,34 +146,114 @@ func (c *campaignsAPI) Bounces(campaignID string, date time.Time, page int, page
 	return b, nil
 }
 
-func (c *campaignsAPI) Opens(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.CampaignRecipientActions, error) {
+func (c *campaignsAPI) Opens(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.Opens, error) {
 	path := getRecipientActivityPath("opens", campaignID, date, page, pageSize, orderField, orderDirection)
-	var o campaigns.CampaignRecipientActions
-	err := c.client.Get(path, &o)
+	var t struct {
+		Results []struct {
+			campaigns.Recipient
+			campaigns.OpenDetails
+			Date string
+		}
+		ResultsOrderedBy order.Field
+		order.Page
+	}
+	err := c.client.Get(path, &t)
 	if err != nil {
-		return campaigns.CampaignRecipientActions{}, err
+		return campaigns.Opens{}, err
 	}
 
-	return o, nil
+	op := campaigns.Opens{
+		Results:   make([]campaigns.OpenDetails, len(t.Results)),
+		OrderedBy: t.ResultsOrderedBy,
+		Page:      t.Page,
+	}
+	for i := 0; i < len(t.Results); i++ {
+		op.Results[i].Recipient = t.Results[i].Recipient
+		op.Results[i].Date, err = dateparse.ParseAny(t.Results[i].Date)
+		op.Results[i].IPAddress = t.Results[i].IPAddress
+		op.Results[i].Latitude = t.Results[i].Latitude
+		op.Results[i].Longitude = t.Results[i].Longitude
+		op.Results[i].City = t.Results[i].City
+		op.Results[i].Region = t.Results[i].Region
+		op.Results[i].CountryCode = t.Results[i].CountryCode
+		op.Results[i].CountryName = t.Results[i].CountryName
+		if err != nil {
+			return campaigns.Opens{}, err
+		}
+	}
+
+	return op, nil
 }
 
-func (c *campaignsAPI) Clicks(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.CampaignRecipientActions, error) {
+func (c *campaignsAPI) Clicks(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.Clicks, error) {
 	path := getRecipientActivityPath("clicks", campaignID, date, page, pageSize, orderField, orderDirection)
-	var o campaigns.CampaignRecipientActions
-	err := c.client.Get(path, &o)
+	var t struct {
+		Results []struct {
+			campaigns.Recipient
+			campaigns.ClickDetails
+			Date string
+			URL  string
+		}
+		ResultsOrderedBy order.Field
+		order.Page
+	}
+	err := c.client.Get(path, &t)
 	if err != nil {
-		return campaigns.CampaignRecipientActions{}, err
+		return campaigns.Clicks{}, err
 	}
 
-	return o, nil
+	cl := campaigns.Clicks{
+		Results:   make([]campaigns.ClickDetails, len(t.Results)),
+		OrderedBy: t.ResultsOrderedBy,
+		Page:      t.Page,
+	}
+	for i := 0; i < len(t.Results); i++ {
+		cl.Results[i].Recipient = t.Results[i].Recipient
+		cl.Results[i].Date, err = dateparse.ParseAny(t.Results[i].Date)
+		cl.Results[i].URL = t.Results[i].URL
+		cl.Results[i].IPAddress = t.Results[i].IPAddress
+		cl.Results[i].Latitude = t.Results[i].Latitude
+		cl.Results[i].Longitude = t.Results[i].Longitude
+		cl.Results[i].City = t.Results[i].City
+		cl.Results[i].Region = t.Results[i].Region
+		cl.Results[i].CountryCode = t.Results[i].CountryCode
+		cl.Results[i].CountryName = t.Results[i].CountryName
+		if err != nil {
+			return campaigns.Clicks{}, err
+		}
+	}
+
+	return cl, nil
 }
 
 func (c *campaignsAPI) Unsubscribes(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.Unsubscribes, error) {
 	path := getRecipientActivityPath("unsubscribes", campaignID, date, page, pageSize, orderField, orderDirection)
-	var u campaigns.Unsubscribes
-	err := c.client.Get(path, &u)
+	var t struct {
+		Results []struct {
+			campaigns.Recipient
+			Date      string
+			IPAddress string
+		}
+		ResultsOrderedBy order.Field
+		order.Page
+	}
+	err := c.client.Get(path, &t)
 	if err != nil {
 		return campaigns.Unsubscribes{}, err
+	}
+
+	u := campaigns.Unsubscribes{
+		Results:   make([]campaigns.Unsubscribe, len(t.Results)),
+		OrderedBy: t.ResultsOrderedBy,
+		Page:      t.Page,
+	}
+	for i := 0; i < len(t.Results); i++ {
+		u.Results[i].Recipient = t.Results[i].Recipient
+		u.Results[i].IPAddress = t.Results[i].IPAddress
+		u.Results[i].Date, err = dateparse.ParseAny(t.Results[i].Date)
+		if err != nil {
+			return campaigns.Unsubscribes{}, err
+		}
 	}
 
 	return u, nil
@@ -205,7 +285,6 @@ func (c *campaignsAPI) SpamComplaints(campaignID string, date time.Time, page in
 		if err != nil {
 			return campaigns.SpamComplaints{}, err
 		}
-
 	}
 
 	return s, nil

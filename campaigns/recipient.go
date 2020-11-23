@@ -10,6 +10,17 @@ type Recipient struct {
 	ListID string
 }
 
+// RecipientLocationDetails represents the location details of a recipient
+type RecipientLocationDetails struct {
+	IPAddress   string
+	Latitude    float64
+	Longitude   float64
+	City        string
+	Region      string
+	CountryCode string
+	CountryName string
+}
+
 // Recipients represents the subscribers to a campaign
 type Recipients struct {
 	// Results represents the specific recipients of a campaign

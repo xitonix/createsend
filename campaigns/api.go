@@ -103,35 +103,6 @@ type Bounces struct {
 	order.Page
 }
 
-type CampaignRecipientAction struct {
-	Recipient
-	Date        CmTime
-	IPAddress   string
-	Latitude    float64
-	Longitude   float64
-	City        string
-	Region      string
-	CountryCode string
-}
-
-type CampaignRecipientActions struct {
-	Results []CampaignRecipientAction
-	order.Field
-	order.Page
-}
-
-type Unsubscribe struct {
-	Recipient
-	Date      CmTime
-	IPAddress string
-}
-
-type Unsubscribes struct {
-	Results []Unsubscribe
-	order.Field
-	order.Page
-}
-
 // API is an interface that wraps campaign related operations.
 //
 // The API contains all the functionality you need to create, delete, send, schedule and query Campaign results.
@@ -180,10 +151,10 @@ type API interface {
 	// code, and country name as geocoded from the IP address, are also returned. You have complete control over how
 	// results should be returned including page size, sort order and sort direction. The date field is optional, opens
 	// on or after the date value specified will be returned.
-	Opens(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (CampaignRecipientActions, error)
+	Opens(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (Opens, error)
 	// Clicks Retrieves a paged result representing all subscribers who clicked a link in a given campaign.
 	// The date field is optional, opens on or after the date value specified will be returned.
-	Clicks(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (CampaignRecipientActions, error)
+	Clicks(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (Clicks, error)
 	// Unsubscribes Retrieves a paged result representing all subscribers who unsubscribed from the email for a
 	// given campaign.
 	// The date field is optional, opens on or after the date value specified will be returned.
