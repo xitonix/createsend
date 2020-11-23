@@ -1,146 +1,229 @@
 package createsend
 
 import (
-	"errors"
 	"fmt"
+	"github.com/araddon/dateparse"
 	"github.com/xitonix/createsend/campaigns"
-	"github.com/xitonix/createsend/campaigns/orderfield"
 	"github.com/xitonix/createsend/internal"
 	"github.com/xitonix/createsend/order"
 	"net/url"
+	"strings"
 	"time"
 )
 
-type campaignAPI struct {
+type campaignsAPI struct {
 	client internal.Client
 }
 
-func newCampaignAPI(client internal.Client) *campaignAPI {
-	return &campaignAPI{client: client}
+func newCampaignAPI(client internal.Client) *campaignsAPI {
+	return &campaignsAPI{client: client}
 }
 
-func (c *campaignAPI) Create(clientID string, campaign campaigns.CampaignFromUrl) (string, error) {
+func (c *campaignsAPI) Create(clientID string, campaign campaigns.WithURLs) (string, error) {
 	path := fmt.Sprintf("campaigns/%s.json", url.QueryEscape(clientID))
 	var cId string
 	err := c.client.Post(path, &cId, campaign)
-	return cId, err
+	if err != nil {
+		return "", err
+	}
+
+	return cId, nil
 }
 
-func (c *campaignAPI) CreateFromTemplate(clientID string, campaign campaigns.CampaignFromTemplate) (string, error) {
+func (c *campaignsAPI) CreateFromTemplate(clientID string, campaign campaigns.Template) (string, error) {
 	path := fmt.Sprintf("campaigns/%s/fromtemplate.json", url.QueryEscape(clientID))
 	var cId string
 	err := c.client.Post(path, &cId, campaign)
-	return cId, err
+	if err != nil {
+		return "", err
+	}
+	return cId, nil
 }
 
-func (c *campaignAPI) SendImmediately(campaignID string, confirmationEmails string) error {
-	return Send(c.client, campaignID, confirmationEmails, "Immediately")
+func (c *campaignsAPI) Send(draftCampaignID string, confirmationEmails ...string) error {
+	return c.SendAt(draftCampaignID, time.Time{}, confirmationEmails...)
 }
 
-func (c *campaignAPI) ScheduleSend(campaignID string, confirmationEmails string, date time.Time) error {
-	return Send(c.client, campaignID, confirmationEmails, date.Format("2006-01-02 15:04"))
+func (c *campaignsAPI) SendAt(draftCampaignID string, at time.Time, confirmationEmails ...string) error {
+	request := struct {
+		ConfirmationEmail string
+		SendDate          string
+	}{
+		ConfirmationEmail: strings.Join(confirmationEmails, ","),
+		SendDate:          "Immediately",
+	}
+	if !at.IsZero() {
+		request.SendDate = at.Format("2006-01-02 15:04")
+	}
+	path := fmt.Sprintf("campaigns/%s/send.json", url.QueryEscape(draftCampaignID))
+
+	return c.client.Post(path, nil, request)
 }
 
-func (c *campaignAPI) Test(campaignID string, previewRecipients []string) error {
-	path := fmt.Sprintf("campaigns/%s/sendpreview.json", url.QueryEscape(campaignID))
-	return c.client.Post(path, nil, struct {
+func (c *campaignsAPI) SendPreview(draftCampaignID string, recipients ...string) error {
+	request := struct {
 		PreviewRecipients []string
 	}{
-		PreviewRecipients: previewRecipients,
-	})
+		PreviewRecipients: recipients,
+	}
+	path := fmt.Sprintf("campaigns/%s/sendpreview.json", url.QueryEscape(draftCampaignID))
+
+	return c.client.Post(path, nil, request)
 }
 
-func (c *campaignAPI) Summary(campaignID string) (campaigns.CampaignSummary, error) {
+func (c *campaignsAPI) Summary(campaignID string) (campaigns.Summary, error) {
 	path := fmt.Sprintf("campaigns/%s/summary.json", url.QueryEscape(campaignID))
-	var cs campaigns.CampaignSummary
+	var cs campaigns.Summary
 	err := c.client.Get(path, &cs)
-	return cs, err
+	if err != nil {
+		return campaigns.Summary{}, err
+	}
+
+	return cs, nil
 }
 
-func (c *campaignAPI) EmailClientUsage(campaignID string) ([]campaigns.EmailClientUsage, error) {
+func (c *campaignsAPI) EmailClientUsage(campaignID string) ([]campaigns.EmailClientUsage, error) {
 	path := fmt.Sprintf("campaigns/%s/emailclientusage.json", url.QueryEscape(campaignID))
 	var ecu []campaigns.EmailClientUsage
 	err := c.client.Get(path, &ecu)
-	return ecu, err
+	if err != nil {
+		return nil, err
+	}
+
+	return ecu, nil
 }
 
-func (c *campaignAPI) ListsAndSegments(campaignID string) (campaigns.ListsAndSegments, error) {
+func (c *campaignsAPI) ListsAndSegments(campaignID string) (campaigns.ListsAndSegments, error) {
 	path := fmt.Sprintf("campaigns/%s/listsandsegments.json", url.QueryEscape(campaignID))
 	var ls campaigns.ListsAndSegments
 	err := c.client.Get(path, &ls)
-	return ls, err
-}
-
-func (c *campaignAPI) Recipients(campaignID string, page int, pageSize int, orderField orderfield.OrderField, orderDirection order.Direction) (campaigns.Recipients, error) {
-	var r campaigns.Recipients
-	if orderField == orderfield.Date {
-		return r, errors.New("date is not a valid order field")
+	if err != nil {
+		return campaigns.ListsAndSegments{}, err
 	}
 
-	path := resultsPath("bounces", campaignID, time.Time{}, page, pageSize, orderField, orderDirection)
-	err := c.client.Get(path, &r)
-	return r, err
+	return ls, nil
 }
 
-func (c *campaignAPI) Bounces(campaignID string, date time.Time, page int, pageSize int, orderField orderfield.OrderField, orderDirection order.Direction) (campaigns.Bounces, error) {
-	path := resultsPath("bounces", campaignID, date, page, pageSize, orderField, orderDirection)
+func (c *campaignsAPI) Recipients(campaignID string, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.Recipients, error) {
+	if orderField == order.Date {
+		return campaigns.Recipients{}, newClientError(ErrCodeInvalidDateOrderField)
+	}
+
+	var t struct {
+		Results []struct {
+			campaigns.Recipient
+		}
+		ResultsOrderedBy order.Field
+		order.Page
+	}
+
+	path := getRecipientActivityPath("recipients", campaignID, time.Time{}, page, pageSize, orderField, orderDirection)
+	err := c.client.Get(path, &t)
+	if err != nil {
+		return campaigns.Recipients{}, err
+	}
+
+	r := campaigns.Recipients{
+		Results:   make([]campaigns.Recipient, len(t.Results)),
+		OrderedBy: t.ResultsOrderedBy,
+		Page:      t.Page,
+	}
+	for i := 0; i < len(t.Results); i++ {
+		r.Results[i] = t.Results[i].Recipient
+	}
+
+	return r, nil
+}
+
+func (c *campaignsAPI) Bounces(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.Bounces, error) {
+	path := getRecipientActivityPath("bounces", campaignID, date, page, pageSize, orderField, orderDirection)
 	var b campaigns.Bounces
 	err := c.client.Get(path, &b)
-	return b, err
+	if err != nil {
+		return campaigns.Bounces{}, err
+	}
+
+	return b, nil
 }
 
-func (c *campaignAPI) Opens(campaignID string, date time.Time, page int, pageSize int, orderField orderfield.OrderField, orderDirection order.Direction) (campaigns.CampaignRecipientActions, error) {
-	path := resultsPath("opens", campaignID, date, page, pageSize, orderField, orderDirection)
+func (c *campaignsAPI) Opens(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.CampaignRecipientActions, error) {
+	path := getRecipientActivityPath("opens", campaignID, date, page, pageSize, orderField, orderDirection)
 	var o campaigns.CampaignRecipientActions
 	err := c.client.Get(path, &o)
-	return o, err
+	if err != nil {
+		return campaigns.CampaignRecipientActions{}, err
+	}
+
+	return o, nil
 }
 
-func (c *campaignAPI) Clicks(campaignID string, date time.Time, page int, pageSize int, orderField orderfield.OrderField, orderDirection order.Direction) (campaigns.CampaignRecipientActions, error) {
-	path := resultsPath("clicks", campaignID, date, page, pageSize, orderField, orderDirection)
+func (c *campaignsAPI) Clicks(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.CampaignRecipientActions, error) {
+	path := getRecipientActivityPath("clicks", campaignID, date, page, pageSize, orderField, orderDirection)
 	var o campaigns.CampaignRecipientActions
 	err := c.client.Get(path, &o)
-	return o, err
+	if err != nil {
+		return campaigns.CampaignRecipientActions{}, err
+	}
+
+	return o, nil
 }
 
-func (c *campaignAPI) Unsubscribes(campaignID string, date time.Time, page int, pageSize int, orderField orderfield.OrderField, orderDirection order.Direction) (campaigns.Unsubscribes, error) {
-	path := resultsPath("unsubscribes", campaignID, date, page, pageSize, orderField, orderDirection)
+func (c *campaignsAPI) Unsubscribes(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.Unsubscribes, error) {
+	path := getRecipientActivityPath("unsubscribes", campaignID, date, page, pageSize, orderField, orderDirection)
 	var u campaigns.Unsubscribes
 	err := c.client.Get(path, &u)
-	return u, err
+	if err != nil {
+		return campaigns.Unsubscribes{}, err
+	}
+
+	return u, nil
 }
 
-func (c *campaignAPI) SpamComplaints(campaignID string, date time.Time, page int, pageSize int, orderField orderfield.OrderField, orderDirection order.Direction) (campaigns.SpamComplaints, error) {
-	path := resultsPath("spam", campaignID, date, page, pageSize, orderField, orderDirection)
-	var s campaigns.SpamComplaints
-	err := c.client.Get(path, &s)
-	return s, err
+func (c *campaignsAPI) SpamComplaints(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.SpamComplaints, error) {
+	path := getRecipientActivityPath("spam", campaignID, date, page, pageSize, orderField, orderDirection)
+	var t struct {
+		Results []struct {
+			campaigns.Recipient
+			Date string
+		}
+		ResultsOrderedBy order.Field
+		order.Page
+	}
+	err := c.client.Get(path, &t)
+	if err != nil {
+		return campaigns.SpamComplaints{}, err
+	}
+
+	s := campaigns.SpamComplaints{
+		Results:   make([]campaigns.SpamComplaint, len(t.Results)),
+		OrderedBy: t.ResultsOrderedBy,
+		Page:      t.Page,
+	}
+	for i := 0; i < len(t.Results); i++ {
+		s.Results[i].Recipient = t.Results[i].Recipient
+		s.Results[i].Date, err = dateparse.ParseAny(t.Results[i].Date)
+		if err != nil {
+			return campaigns.SpamComplaints{}, err
+		}
+
+	}
+
+	return s, nil
 }
 
-func (c *campaignAPI) Delete(campaignID string) error {
+func (c *campaignsAPI) Delete(campaignID string) error {
 	return c.client.Delete(fmt.Sprintf("campaigns/%s.json", campaignID))
 }
 
-func (c *campaignAPI) Unschedule(campaignID string) error {
+func (c *campaignsAPI) Unschedule(campaignID string) error {
 	return c.client.Delete(fmt.Sprintf("campaigns/%s/unschedule.json", campaignID))
 }
 
-func resultsPath(action string, campaignID string, date time.Time, page int, pageSize int, orderField orderfield.OrderField, orderDirection order.Direction) string {
+func getRecipientActivityPath(action string, campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) string {
 	var dateQueryString = ""
 	if !date.IsZero() {
 		dateQueryString = fmt.Sprintf("date=%s", date.Format("2006-01-02 15:04"))
 	}
 
 	return fmt.Sprintf("campaigns/%s/%s.json?%spage=%d&pagesize=%d&orderfield=%s&orderdirection=%s", url.QueryEscape(campaignID), action, dateQueryString, page, pageSize, orderField, orderDirection)
-}
-
-func Send(client internal.Client, campaignID string, confirmationEmails string, formattedDate string) error {
-	path := fmt.Sprintf("campaigns/%s/send.json", url.QueryEscape(campaignID))
-	return client.Post(path, nil, struct {
-		ConfirmationEmail string
-		SendDate          string
-	}{
-		ConfirmationEmail: confirmationEmails,
-		SendDate:          formattedDate,
-	})
 }

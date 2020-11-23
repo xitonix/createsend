@@ -42,14 +42,16 @@ type SuppressionList struct {
 // ToSuppressionList converts the raw model to a new createsend model.
 func (s *SuppressionList) ToSuppressionList() (*clients.SuppressionList, error) {
 	output := &clients.SuppressionList{
-		Entries:              make([]*clients.SuppressionDetails, len(s.Results)),
-		OrderedBy:            s.ResultsOrderedBy,
-		OrderDirection:       s.OrderDirection,
-		PageNumber:           s.PageNumber,
-		PageSize:             s.PageSize,
-		RecordsOnThisPage:    s.RecordsOnThisPage,
-		TotalNumberOfRecords: s.TotalNumberOfRecords,
-		NumberOfPages:        s.NumberOfPages,
+		Entries:   make([]*clients.SuppressionDetails, len(s.Results)),
+		OrderedBy: s.ResultsOrderedBy,
+		Page: order.Page{
+			OrderDirection: s.OrderDirection,
+			Number:         s.PageNumber,
+			Size:           s.PageSize,
+			Records:        s.RecordsOnThisPage,
+			Total:          s.TotalNumberOfRecords,
+			NumberOfPages:  s.NumberOfPages,
+		},
 	}
 	for i, entry := range s.Results {
 		date, err := dateparse.ParseAny(entry.Date)

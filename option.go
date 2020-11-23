@@ -61,6 +61,15 @@ func WithAccountsAPI(api accounts.API) Option {
 	}
 }
 
+// WithCampaignsAPI overrides the internal object for accessing Campaign API.
+//
+// You can override the API to mock out Campaign API methods altogether.
+func WithCampaignsAPI(api campaigns.API) Option {
+	return func(options *Options) {
+		options.campaigns = api
+	}
+}
+
 // WithContext sets the context for all the HTTP requests.
 func WithContext(ctx context.Context) Option {
 	return func(options *Options) {
