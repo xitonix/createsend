@@ -137,6 +137,132 @@ func TestClientsAPI_SentCampaignRecipients(t *testing.T) {
 	}
 }
 
+func TestClientsAPI_Bounces(t *testing.T) {
+	testCases := []struct {
+		title                 string
+		expectClientSideError bool
+		response              *http.Response
+		expected              campaigns.Bounces
+		expectedError         error
+	}{
+		{
+			title: "no bounces",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [],
+					"ResultsOrderedBy": "date",
+					"OrderDirection": "desc",
+					"PageNumber": 1,
+					"PageSize": 100,
+					"RecordsOnThisPage": 0,
+					"TotalNumberOfRecords": 0,
+					"NumberOfPages": 0
+				}`)),
+			},
+			expected: campaigns.Bounces{
+				Results:   []campaigns.Bounce{},
+				OrderedBy: order.Date,
+				Page: order.Page{
+					OrderDirection: order.DESC,
+					Number:         1,
+					Size:           100,
+					Records:        0,
+					Total:          0,
+					NumberOfPages:  0,
+				},
+			},
+		},
+		{
+			title: "some bounces",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+						{
+							"EmailAddress": "example+1@example.com",
+							"ListID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+							"BounceType": "Hard",
+							"Date": "2009-05-18 16:45:00",
+							"Reason": "Invalid Email Address"
+						},
+						{
+							"EmailAddress": "example+2@example.com",
+							"ListID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+							"BounceType": "Soft",
+							"Date": "2009-05-20 16:45:00",
+							"Reason": "Soft Bounce - Mailbox Full"
+						}
+					],
+					"ResultsOrderedBy": "date",
+					"OrderDirection": "desc",
+					"PageNumber": 1,
+					"PageSize": 100,
+					"RecordsOnThisPage": 4,
+					"TotalNumberOfRecords": 4,
+					"NumberOfPages": 1
+				}`)),
+			},
+			expected: campaigns.Bounces{
+				Results: []campaigns.Bounce{
+					{
+						Recipient: campaigns.Recipient{
+							EmailAddress: "example+1@example.com",
+							ListID:       "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+						},
+						Date:       time.Date(2009, 05, 18, 16, 45, 00, 00, time.UTC),
+						BounceType: "Hard",
+						Reason:     "Invalid Email Address",
+					},
+					{
+						Recipient: campaigns.Recipient{
+							EmailAddress: "example+2@example.com",
+							ListID:       "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+						},
+						Date:       time.Date(2009, 05, 20, 16, 45, 00, 00, time.UTC),
+						BounceType: "Soft",
+						Reason:     "Soft Bounce - Mailbox Full",
+					},
+				},
+				OrderedBy: order.Date,
+				Page: order.Page{
+					OrderDirection: order.DESC,
+					Number:         1,
+					Size:           100,
+					Records:        4,
+					Total:          4,
+					NumberOfPages:  1,
+				},
+			},
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, true, false)
+			httpClient.SetResponse("campaigns/campaign_id/bounces.json", tC.response)
+			actual, err := client.Campaigns().Bounces("campaign_id", time.Time{}, 1, 100, order.Date, order.DESC)
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, true)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestClientsAPI_Unsubscribes(t *testing.T) {
 	testCases := []struct {
 		title                 string

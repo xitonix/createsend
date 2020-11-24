@@ -90,19 +90,6 @@ type ListsAndSegments struct {
 	Segments []Segment
 }
 
-type Bounce struct {
-	Recipient
-	BounceType string
-	Date       CmTime
-	Reason     string
-}
-
-type Bounces struct {
-	Results []Bounce
-	order.Field
-	order.Page
-}
-
 // API is an interface that wraps campaign related operations.
 //
 // The API contains all the functionality you need to create, delete, send, schedule and query Campaign results.
