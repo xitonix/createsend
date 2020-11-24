@@ -51,22 +51,6 @@ type Template struct {
 	TemplateContent TemplateContent
 }
 
-type Summary struct {
-	Recipients        int
-	TotalOpened       int
-	Clicks            int
-	Unsubscribed      int
-	Bounced           int
-	UniqueOpened      int
-	SpamComplaints    int
-	WebVersionURL     string
-	WebVersionTextURL string
-	WorldviewURL      string
-	Forwards          int
-	Likes             int
-	Mentions          int
-}
-
 // API is an interface that wraps campaign related operations.
 //
 // The API contains all the functionality you need to create, delete, send, schedule and query Campaign results.

@@ -11,6 +11,86 @@ import (
 	"time"
 )
 
+func TestClientsAPI_Summary(t *testing.T) {
+	testCases := []struct {
+		title                 string
+		expectClientSideError bool
+		response              *http.Response
+		expected              campaigns.Summary
+		expectedError         error
+	}{
+		{
+			title: "no email client usage",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			expected: campaigns.Summary{},
+		},
+		{
+			title: "some email client usage",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Recipients": 1000,
+					"TotalOpened": 345,
+					"Clicks": 132,
+					"Unsubscribed": 43,
+					"Bounced": 15,
+					"UniqueOpened": 298,
+					"SpamComplaints": 23,
+					"WebVersionURL": "http://createsend.com/t/y-A1A1A1A1A1A1A1A1A1A1A1A1/",
+					"WebVersionTextURL": "http://createsend.com/t/y-A1A1A1A1A1A1A1A1A1A1A1A1/t",
+					"WorldviewURL": "http://myclient.createsend.com/reports/wv/y/8WY898U9U98U9U9",
+					"Forwards": 18,
+					"Likes": 25,
+					"Mentions": 11
+				}`)),
+			},
+			expected: campaigns.Summary{
+				Recipients:        1000,
+				TotalOpened:       345,
+				Clicks:            132,
+				Unsubscribed:      43,
+				Bounced:           15,
+				UniqueOpened:      298,
+				SpamComplaints:    23,
+				WebVersionURL:     "http://createsend.com/t/y-A1A1A1A1A1A1A1A1A1A1A1A1/",
+				WebVersionTextURL: "http://createsend.com/t/y-A1A1A1A1A1A1A1A1A1A1A1A1/t",
+				WorldviewURL:      "http://myclient.createsend.com/reports/wv/y/8WY898U9U98U9U9",
+				Forwards:          18,
+				Likes:             25,
+				Mentions:          11,
+			},
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, true, false)
+			httpClient.SetResponse("campaigns/campaign_id/summary.json", tC.response)
+			actual, err := client.Campaigns().Summary("campaign_id")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, true)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestClientsAPI_EmailClientUsage(t *testing.T) {
 	testCases := []struct {
 		title                 string
