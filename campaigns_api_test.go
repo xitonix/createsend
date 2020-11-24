@@ -11,6 +11,108 @@ import (
 	"time"
 )
 
+func TestClientsAPI_EmailClientUsage(t *testing.T) {
+	testCases := []struct {
+		title                 string
+		expectClientSideError bool
+		response              *http.Response
+		expected              []campaigns.EmailClientUsage
+		expectedError         error
+	}{
+		{
+			title: "no email client usage",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
+			},
+			expected: []campaigns.EmailClientUsage{},
+		},
+		{
+			title: "some email client usage",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`[
+					{
+						"Client": "iOS Devices",
+						"Version": "iPhone",
+						"Percentage": 19.83,
+						"Subscribers": 7056
+					},
+					{
+						"Client": "Apple Mail",
+						"Version": "Apple Mail 6",
+						"Percentage": 13.02,
+						"Subscribers": 4633
+					},
+					{
+						"Client": "Microsoft Outlook",
+						"Version": "Outlook 2010",
+						"Percentage": 7.18,
+						"Subscribers": 2556
+					},
+					{
+						"Client": "Undetectable",
+						"Version": "Undetectable",
+						"Percentage": 4.94,
+						"Subscribers": 1632
+					}
+				]`)),
+			},
+			expected: []campaigns.EmailClientUsage{
+				{
+					Client:      "iOS Devices",
+					Version:     "iPhone",
+					Percentage:  19.83,
+					Subscribers: 7056,
+				},
+				{
+					Client:      "Apple Mail",
+					Version:     "Apple Mail 6",
+					Percentage:  13.02,
+					Subscribers: 4633,
+				},
+				{
+					Client:      "Microsoft Outlook",
+					Version:     "Outlook 2010",
+					Percentage:  7.18,
+					Subscribers: 2556,
+				},
+				{
+					Client:      "Undetectable",
+					Version:     "Undetectable",
+					Percentage:  4.94,
+					Subscribers: 1632,
+				},
+			},
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, true, false)
+			httpClient.SetResponse("campaigns/campaign_id/emailclientusage.json", tC.response)
+			actual, err := client.Campaigns().EmailClientUsage("campaign_id")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, true)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestClientsAPI_ListsAndSegments(t *testing.T) {
 	testCases := []struct {
 		title                 string
