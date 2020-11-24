@@ -67,29 +67,6 @@ type Summary struct {
 	Mentions          int
 }
 
-type EmailClientUsage struct {
-	Client      string
-	Version     string
-	Percentage  float32
-	Subscribers int
-}
-
-type List struct {
-	ID   string `json:"ListID"`
-	Name string
-}
-
-type Segment struct {
-	ID     string `json:"SegmentID"`
-	ListID string
-	Title  string
-}
-
-type ListsAndSegments struct {
-	Lists    []List
-	Segments []Segment
-}
-
 // API is an interface that wraps campaign related operations.
 //
 // The API contains all the functionality you need to create, delete, send, schedule and query Campaign results.

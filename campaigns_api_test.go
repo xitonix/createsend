@@ -11,6 +11,110 @@ import (
 	"time"
 )
 
+func TestClientsAPI_ListsAndSegments(t *testing.T) {
+	testCases := []struct {
+		title                 string
+		expectClientSideError bool
+		response              *http.Response
+		expected              campaigns.ListsAndSegments
+		expectedError         error
+	}{
+		{
+			title: "no lists and segments for a given campaign",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Lists": [],
+					"Segments": []
+				}`)),
+			},
+			expected: campaigns.ListsAndSegments{
+				Lists:    []campaigns.List{},
+				Segments: []campaigns.Segment{},
+			},
+		},
+		{
+			title: "some lists and segments for a given campaign",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Lists": [
+						{
+							"ListID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+							"Name": "My List 1"
+						},
+						{
+							"ListID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+							"Name": "My List 2"
+						}
+					],
+					"Segments": [
+						{
+							"ListID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+							"SegmentID": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+							"Title": "My Segment 1"
+						},
+						{
+							"ListID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+							"SegmentID": "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4",
+							"Title": "My Segment 2"
+						}
+					]
+				}`)),
+			},
+			expected: campaigns.ListsAndSegments{
+				Lists: []campaigns.List{
+					{
+						Name: "My List 1",
+						ID:   "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+					},
+					{
+						Name: "My List 2",
+						ID:   "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+					},
+				},
+				Segments: []campaigns.Segment{
+					{
+						Title:  "My Segment 1",
+						ListID: "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+						ID:     "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+					},
+					{
+						Title:  "My Segment 2",
+						ListID: "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+						ID:     "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4",
+					},
+				},
+			},
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, true, false)
+			httpClient.SetResponse("campaigns/campaign_id/listsandsegments.json", tC.response)
+			actual, err := client.Campaigns().ListsAndSegments("campaign_id")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, true)
+			}
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestClientsAPI_SentCampaignRecipients(t *testing.T) {
 	testCases := []struct {
 		title                 string
