@@ -12,12 +12,19 @@ type Recipient struct {
 
 // RecipientLocationDetails represents the location details of a recipient
 type RecipientLocationDetails struct {
-	IPAddress   string
-	Latitude    float64
-	Longitude   float64
-	City        string
-	Region      string
+	// IPAddress the IP address
+	IPAddress string
+	// Latitude as geocoded from the IP address
+	Latitude float64
+	// Longitude as geocoded from the IP address
+	Longitude float64
+	// City as geocoded from the IP address
+	City string
+	// Region as geocoded from the IP address
+	Region string
+	// CountryCode as geocoded from the IP address
 	CountryCode string
+	// CountryName as geocoded from the IP address
 	CountryName string
 }
 

@@ -5,15 +5,23 @@ import (
 	"time"
 )
 
+// Bounce represent basic details about specific a bounce
 type Bounce struct {
+	// Recipient details of the email that bounced
 	Recipient
-	Date       time.Time
+	// Date that the bounce occurred
+	Date time.Time
+	// BounceType the type of bounce
 	BounceType string
-	Reason     string
+	// Reason more detailed information regarding the bounce
+	Reason string
 }
 
 type Bounces struct {
-	Results   []Bounce
+	// Results represent basic details about specific a bounce
+	Results []Bounce
+	// OrderedBy the field by which the result set was ordered (email/list/date).
 	OrderedBy order.Field
-	Page      order.Page
+	// Page paginated result details
+	Page order.Page
 }

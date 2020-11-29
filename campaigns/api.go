@@ -5,52 +5,6 @@ import (
 	"time"
 )
 
-type BasicDetails struct {
-	Name       string
-	Subject    string
-	FromName   string
-	FromEmail  string
-	ReplyTo    string
-	ListIds    []string
-	SegmentIds []string
-}
-
-type WithURLs struct {
-	BasicDetails
-	Html string
-	Text string
-}
-
-type EditableField struct {
-	Content string
-	ALT     string
-	HREF    string
-}
-
-type RepeaterItem struct {
-	Layout      []string
-	SingleLines []EditableField
-	MultiLines  []EditableField
-	Images      []EditableField
-}
-
-type Repeater struct {
-	Items []RepeaterItem
-}
-
-type TemplateContent struct {
-	SingleLines []EditableField
-	MultiLines  []EditableField
-	Images      []EditableField
-	Repeaters   []Repeater
-}
-
-type Template struct {
-	BasicDetails
-	ID              string `json:"TemplateID"`
-	TemplateContent TemplateContent
-}
-
 // API is an interface that wraps campaign related operations.
 //
 // The API contains all the functionality you need to create, delete, send, schedule and query Campaign results.
