@@ -22,7 +22,7 @@ const (
 	ErrCodeInvalidJSON ClientErrorCode = -8
 	// ErrCodeInvalidRequestBody the provided request was invalid.
 	ErrCodeInvalidRequestBody ClientErrorCode = -9
-	// ErrCodeInvalidRequestBody the provided date order field is invalid.
+	// ErrCodeInvalidDateOrderField the provided date order field is invalid.
 	ErrCodeInvalidDateOrderField ClientErrorCode = -10
 )
 

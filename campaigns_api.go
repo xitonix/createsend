@@ -21,23 +21,23 @@ func newCampaignAPI(client internal.Client) *campaignsAPI {
 
 func (c *campaignsAPI) Create(clientID string, campaign campaigns.WithURLs) (string, error) {
 	path := fmt.Sprintf("campaigns/%s.json", url.QueryEscape(clientID))
-	var cId string
-	err := c.client.Post(path, &cId, campaign)
+	var cID string
+	err := c.client.Post(path, &cID, campaign)
 	if err != nil {
 		return "", err
 	}
 
-	return cId, nil
+	return cID, nil
 }
 
 func (c *campaignsAPI) CreateFromTemplate(clientID string, campaign campaigns.Template) (string, error) {
 	path := fmt.Sprintf("campaigns/%s/fromtemplate.json", url.QueryEscape(clientID))
-	var cId string
-	err := c.client.Post(path, &cId, campaign)
+	var cID string
+	err := c.client.Post(path, &cID, campaign)
 	if err != nil {
 		return "", err
 	}
-	return cId, nil
+	return cID, nil
 }
 
 func (c *campaignsAPI) Send(draftCampaignID string, confirmationEmails ...string) error {
