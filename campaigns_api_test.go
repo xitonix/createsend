@@ -423,6 +423,15 @@ func TestClientsAPI_SentCampaignRecipients(t *testing.T) {
 	}
 }
 
+func TestClientsAPI_SentCampaignRecipients_DoesNotSupportDateOrder(t *testing.T) {
+	expectedError := newClientError(ErrCodeInvalidDateOrderField)
+	client, _ := createClient(t, true, false)
+	_, err := client.Campaigns().Recipients("campaign_id", 1, 100, order.Date, order.DESC)
+	if !checkError(err, expectedError) {
+		t.Errorf("Expected '%v' error, actual: '%v'", expectedError, err)
+	}
+}
+
 func TestClientsAPI_Bounces(t *testing.T) {
 	testCases := []struct {
 		title                 string
