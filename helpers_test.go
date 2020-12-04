@@ -5,6 +5,8 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/xitonix/createsend/mock"
@@ -74,4 +76,18 @@ func checkError(actual, expected error) bool {
 		return false
 	}
 	return errors.Is(actual, expected)
+}
+
+func checkQueryStringParameters(t *testing.T, requested *url.URL, expected map[string]string) {
+	t.Helper()
+	query := requested.Query()
+	if len(query) != len(expected) {
+		t.Errorf("Expected number of query string parameters: %d, Actual: %d", len(expected), len(query))
+	}
+	for k, expectedValue := range expected {
+		actualValue := query.Get(k)
+		if !strings.EqualFold(expectedValue, actualValue) {
+			t.Errorf("Expected query string value under %s key: %q, Actual: %q", k, expectedValue, actualValue)
+		}
+	}
 }
