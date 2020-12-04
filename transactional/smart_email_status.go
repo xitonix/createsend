@@ -56,6 +56,6 @@ func (r *SmartEmailStatus) UnmarshalJSON(b []byte) error {
 }
 
 // String Stringer implementation
-func (r *SmartEmailStatus) String() string {
-	return smartEmailStatusFromValue[*r]
+func (r SmartEmailStatus) String() string {
+	return smartEmailStatusFromValue[r]
 }
