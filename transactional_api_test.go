@@ -22,7 +22,7 @@ func TestTransactionalAPI_SmartEmails(t *testing.T) {
 		forceHTTPClientError  bool
 		expectClientSideError bool
 		response              *http.Response
-		expected              []*transactional.SmartEmailDetails
+		expected              []*transactional.SmartEmailBasicDetails
 		expectedError         error
 		oAuthAuthentication   bool
 	}{
@@ -32,7 +32,7 @@ func TestTransactionalAPI_SmartEmails(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
 			},
-			expected: []*transactional.SmartEmailDetails{},
+			expected: []*transactional.SmartEmailBasicDetails{},
 		},
 		{
 			title: "no smart emails and empty server response body",
@@ -40,7 +40,7 @@ func TestTransactionalAPI_SmartEmails(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(&bytes.Buffer{}),
 			},
-			expected: []*transactional.SmartEmailDetails{},
+			expected: []*transactional.SmartEmailBasicDetails{},
 		},
 		{
 			title: "with smart emails",
@@ -61,7 +61,7 @@ func TestTransactionalAPI_SmartEmails(t *testing.T) {
 				}
 			]`)),
 			},
-			expected: []*transactional.SmartEmailDetails{
+			expected: []*transactional.SmartEmailBasicDetails{
 				{
 					ID:        "id1",
 					Name:      "name1",
@@ -106,7 +106,7 @@ func TestTransactionalAPI_SmartEmails(t *testing.T) {
 				}
 			]`)),
 			},
-			expected: []*transactional.SmartEmailDetails{
+			expected: []*transactional.SmartEmailBasicDetails{
 				{
 					ID:        "id",
 					Name:      "name",
@@ -129,7 +129,7 @@ func TestTransactionalAPI_SmartEmails(t *testing.T) {
 				}
 			]`)),
 			},
-			expected: []*transactional.SmartEmailDetails{
+			expected: []*transactional.SmartEmailBasicDetails{
 				{
 					ID:        "id",
 					Name:      "name",
@@ -152,7 +152,7 @@ func TestTransactionalAPI_SmartEmails(t *testing.T) {
 				}
 			]`)),
 			},
-			expected: []*transactional.SmartEmailDetails{
+			expected: []*transactional.SmartEmailBasicDetails{
 				{
 					ID:        "id",
 					Name:      "name",
@@ -174,7 +174,7 @@ func TestTransactionalAPI_SmartEmails(t *testing.T) {
 				}
 			]`)),
 			},
-			expected: []*transactional.SmartEmailDetails{
+			expected: []*transactional.SmartEmailBasicDetails{
 				{
 					ID:        "id",
 					Name:      "name",
