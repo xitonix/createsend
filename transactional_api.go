@@ -35,7 +35,7 @@ func (t *transactionalAPI) SmartEmail(smartEmailID string) (*transactional.Smart
 
 	result, err := smartEmail.ToSmartEmailDetails()
 	if err != nil {
-		return nil, newClientError(ErrCodeDataProcessing)
+		return nil, newWrappedClientError("Failed to parse the smart email details", err, ErrCodeDataProcessing)
 	}
 
 	return result, nil
@@ -64,7 +64,7 @@ func (t *transactionalAPI) smartEmailsByStatus(status transactional.SmartEmailSt
 	for i, raw := range smartEmails {
 		smartEmail, err := raw.ToSmartEmailBasicDetails()
 		if err != nil {
-			return nil, newClientError(ErrCodeDataProcessing)
+			return nil, newWrappedClientError("Failed to parse the smart email basic details", err, ErrCodeDataProcessing)
 		}
 		result[i] = smartEmail
 	}

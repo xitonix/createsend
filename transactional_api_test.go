@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"net/mail"
 	"testing"
 	"time"
 
@@ -225,6 +226,428 @@ func TestTransactionalAPI_SmartEmails(t *testing.T) {
 
 			checkQueryStringParameters(t, httpClient.LastRequest(), expectedQuery)
 
+			if diff := cmp.Diff(tC.expected, actual); diff != "" {
+				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestTransactionalAPI_SmartEmail(t *testing.T) {
+	date := time.Date(2020, 12, 1, 20, 21, 22, 0, time.UTC)
+	testCases := []struct {
+		title                 string
+		forceHTTPClientError  bool
+		expectClientSideError bool
+		response              *http.Response
+		expected              *transactional.SmartEmailDetails
+		expectedError         error
+		oAuthAuthentication   bool
+	}{
+		{
+			title: "empty json response",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
+			},
+			expected: &transactional.SmartEmailDetails{},
+		},
+		{
+			title: "empty server response body",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(&bytes.Buffer{}),
+			},
+			expected: &transactional.SmartEmailDetails{},
+		},
+		{
+			title: "all fields populated",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"SmartEmailID": "smart_email_id",
+					"CreatedAt": "2020-12-01T20:21:22+00:00",
+					"Status": "Active",
+					"Name": "name",
+					"Properties": {
+					  "From": "from <from@domain.com>",
+					  "ReplyTo": "reply_to <reply_to@domain.com>",
+					  "Subject": "subject",
+					  "Content": {
+						  "Html": "html",
+						  "Text": "text",
+						  "EmailVariables": [
+							  "var1",
+							  "var2"
+						  ],
+						  "InlineCss": true
+					  },
+					  "TextPreviewUrl": "text_url",
+					  "HtmlPreviewUrl": "html_url"
+					},
+					"AddRecipientsToList": "list_id"
+				}`)),
+			},
+			expected: &transactional.SmartEmailDetails{
+				SmartEmailBasicDetails: transactional.SmartEmailBasicDetails{
+					ID:        "smart_email_id",
+					Name:      "name",
+					CreatedAt: date,
+					Status:    transactional.ActiveSmartEmail,
+				},
+				From: mail.Address{
+					Name:    "from",
+					Address: "from@domain.com",
+				},
+				ReplyTo: &mail.Address{
+					Name:    "reply_to",
+					Address: "reply_to@domain.com",
+				},
+				Subject:             "subject",
+				HTML:                "html",
+				Text:                "text",
+				EmailVariables:      []string{"var1", "var2"},
+				InlineCSS:           true,
+				TextPreviewURL:      "text_url",
+				HTMLPreviewURL:      "html_url",
+				AddRecipientsToList: "list_id",
+			},
+		},
+		{
+			title: "empty reply_to value",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"SmartEmailID": "smart_email_id",
+					"CreatedAt": "2020-12-01T20:21:22+00:00",
+					"Status": "Active",
+					"Name": "name",
+					"Properties": {
+					  "From": "from <from@domain.com>",
+					  "Subject": "subject",
+					  "Content": {
+						  "Html": "html",
+						  "Text": "text",
+						  "EmailVariables": [
+							  "var1",
+							  "var2"
+						  ],
+						  "InlineCss": true
+					  },
+					  "TextPreviewUrl": "text_url",
+					  "HtmlPreviewUrl": "html_url"
+					},
+					"AddRecipientsToList": "list_id"
+				}`)),
+			},
+			expected: &transactional.SmartEmailDetails{
+				SmartEmailBasicDetails: transactional.SmartEmailBasicDetails{
+					ID:        "smart_email_id",
+					Name:      "name",
+					CreatedAt: date,
+					Status:    transactional.ActiveSmartEmail,
+				},
+				From: mail.Address{
+					Name:    "from",
+					Address: "from@domain.com",
+				},
+				Subject:             "subject",
+				HTML:                "html",
+				Text:                "text",
+				EmailVariables:      []string{"var1", "var2"},
+				InlineCSS:           true,
+				TextPreviewURL:      "text_url",
+				HTMLPreviewURL:      "html_url",
+				AddRecipientsToList: "list_id",
+			},
+		},
+		{
+			title: "null email variable list",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"SmartEmailID": "smart_email_id",
+					"CreatedAt": "2020-12-01T20:21:22+00:00",
+					"Status": "Active",
+					"Name": "name",
+					"Properties": {
+					  "From": "from <from@domain.com>",
+					  "ReplyTo": "reply_to <reply_to@domain.com>",
+					  "Subject": "subject",
+					  "Content": {
+						  "Html": "html",
+						  "Text": "text",
+						  "EmailVariables": null,
+						  "InlineCss": true
+					  },
+					  "TextPreviewUrl": "text_url",
+					  "HtmlPreviewUrl": "html_url"
+					},
+					"AddRecipientsToList": "list_id"
+				}`)),
+			},
+			expected: &transactional.SmartEmailDetails{
+				SmartEmailBasicDetails: transactional.SmartEmailBasicDetails{
+					ID:        "smart_email_id",
+					Name:      "name",
+					CreatedAt: date,
+					Status:    transactional.ActiveSmartEmail,
+				},
+				From: mail.Address{
+					Name:    "from",
+					Address: "from@domain.com",
+				},
+				ReplyTo: &mail.Address{
+					Name:    "reply_to",
+					Address: "reply_to@domain.com",
+				},
+				Subject:             "subject",
+				HTML:                "html",
+				Text:                "text",
+				EmailVariables:      nil,
+				InlineCSS:           true,
+				TextPreviewURL:      "text_url",
+				HTMLPreviewURL:      "html_url",
+				AddRecipientsToList: "list_id",
+			},
+		},
+		{
+			title: "empty email variables",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"SmartEmailID": "smart_email_id",
+					"CreatedAt": "2020-12-01T20:21:22+00:00",
+					"Status": "Active",
+					"Name": "name",
+					"Properties": {
+					  "From": "from <from@domain.com>",
+					  "ReplyTo": "reply_to <reply_to@domain.com>",
+					  "Subject": "subject",
+					  "Content": {
+						  "Html": "html",
+						  "Text": "text",
+						  "EmailVariables": [],
+						  "InlineCss": true
+					  },
+					  "TextPreviewUrl": "text_url",
+					  "HtmlPreviewUrl": "html_url"
+					},
+					"AddRecipientsToList": "list_id"
+				}`)),
+			},
+			expected: &transactional.SmartEmailDetails{
+				SmartEmailBasicDetails: transactional.SmartEmailBasicDetails{
+					ID:        "smart_email_id",
+					Name:      "name",
+					CreatedAt: date,
+					Status:    transactional.ActiveSmartEmail,
+				},
+				From: mail.Address{
+					Name:    "from",
+					Address: "from@domain.com",
+				},
+				ReplyTo: &mail.Address{
+					Name:    "reply_to",
+					Address: "reply_to@domain.com",
+				},
+				Subject:             "subject",
+				HTML:                "html",
+				Text:                "text",
+				EmailVariables:      []string{},
+				InlineCSS:           true,
+				TextPreviewURL:      "text_url",
+				HTMLPreviewURL:      "html_url",
+				AddRecipientsToList: "list_id",
+			},
+		},
+		{
+			title: "email addresses without name section",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"SmartEmailID": "smart_email_id",
+					"CreatedAt": "2020-12-01T20:21:22+00:00",
+					"Status": "Active",
+					"Name": "name",
+					"Properties": {
+					  "From": "from@domain.com",
+					  "ReplyTo": "reply_to@domain.com",
+					  "Subject": "subject",
+					  "Content": {
+						  "Html": "html",
+						  "Text": "text",
+						  "EmailVariables": [
+							  "var1",
+							  "var2"
+						  ],
+						  "InlineCss": true
+					  },
+					  "TextPreviewUrl": "text_url",
+					  "HtmlPreviewUrl": "html_url"
+					},
+					"AddRecipientsToList": "list_id"
+				}`)),
+			},
+			expected: &transactional.SmartEmailDetails{
+				SmartEmailBasicDetails: transactional.SmartEmailBasicDetails{
+					ID:        "smart_email_id",
+					Name:      "name",
+					CreatedAt: date,
+					Status:    transactional.ActiveSmartEmail,
+				},
+				From: mail.Address{
+					Name:    "",
+					Address: "from@domain.com",
+				},
+				ReplyTo: &mail.Address{
+					Name:    "",
+					Address: "reply_to@domain.com",
+				},
+				Subject:             "subject",
+				HTML:                "html",
+				Text:                "text",
+				EmailVariables:      []string{"var1", "var2"},
+				InlineCSS:           true,
+				TextPreviewURL:      "text_url",
+				HTMLPreviewURL:      "html_url",
+				AddRecipientsToList: "list_id",
+			},
+		},
+		{
+			title: "invalid creation date",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"SmartEmailID": "smart_email_id",
+					"CreatedAt": "invalid date",
+					"Status": "Active",
+					"Name": "name"
+				}`)),
+			},
+			expected:              nil,
+			expectClientSideError: true,
+			expectedError:         newClientError(ErrCodeDataProcessing),
+		},
+		{
+			title: "invalid from address",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"SmartEmailID": "smart_email_id",
+					"CreatedAt": "2020-12-01T20:21:22+00:00",
+					"Status": "Active",
+					"Name": "name",
+					"Properties": {
+					  "From": "invalid_email_address"
+					}
+				}`)),
+			},
+			expected:              nil,
+			expectClientSideError: true,
+			expectedError:         newClientError(ErrCodeDataProcessing),
+		},
+		{
+			title: "invalid reply_to address",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"SmartEmailID": "smart_email_id",
+					"CreatedAt": "2020-12-01T20:21:22+00:00",
+					"Status": "Active",
+					"Name": "name",
+					"Properties": {
+					  "From": "from@domain.com",
+					  "ReplyTo": "invalid_email_address"
+					}
+				}`)),
+			},
+			expected:              nil,
+			expectClientSideError: true,
+			expectedError:         newClientError(ErrCodeDataProcessing),
+		},
+
+		{
+			title: "oAuth Authentication",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"SmartEmailID": "smart_email_id",
+					"CreatedAt": "2020-12-01T20:21:22+00:00",
+					"Status": "Active",
+					"Name": "name",
+					"Properties": {
+					  "From": "from <from@domain.com>",
+					  "ReplyTo": "reply_to <reply_to@domain.com>",
+					  "Subject": "subject",
+					  "Content": {
+						  "Html": "html",
+						  "Text": "text",
+						  "EmailVariables": [
+							  "var1",
+							  "var2"
+						  ],
+						  "InlineCss": true
+					  },
+					  "TextPreviewUrl": "text_url",
+					  "HtmlPreviewUrl": "html_url"
+					},
+					"AddRecipientsToList": "list_id"
+				}`)),
+			},
+			expected: &transactional.SmartEmailDetails{
+				SmartEmailBasicDetails: transactional.SmartEmailBasicDetails{
+					ID:        "smart_email_id",
+					Name:      "name",
+					CreatedAt: date,
+					Status:    transactional.ActiveSmartEmail,
+				},
+				From: mail.Address{
+					Name:    "from",
+					Address: "from@domain.com",
+				},
+				ReplyTo: &mail.Address{
+					Name:    "reply_to",
+					Address: "reply_to@domain.com",
+				},
+				Subject:             "subject",
+				HTML:                "html",
+				Text:                "text",
+				EmailVariables:      []string{"var1", "var2"},
+				InlineCSS:           true,
+				TextPreviewURL:      "text_url",
+				HTMLPreviewURL:      "html_url",
+				AddRecipientsToList: "list_id",
+			},
+			oAuthAuthentication: true,
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("transactional/smartEmail/smart_email_id", tC.response)
+			actual, err := client.Transactional().SmartEmail("smart_email_id")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.expectClientSideError && !tC.forceHTTPClientError)
+			}
 			if diff := cmp.Diff(tC.expected, actual); diff != "" {
 				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
 			}

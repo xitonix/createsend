@@ -50,8 +50,8 @@ type SmartEmailDetails struct {
 
 // ToSmartEmailDetails converts the raw model to a new createsend model.
 func (s *SmartEmailDetails) ToSmartEmailDetails() (*transactional.SmartEmailDetails, error) {
-	if s == nil {
-		return nil, nil
+	if s == nil || s.ID == "" {
+		return &transactional.SmartEmailDetails{}, nil
 	}
 
 	date, err := dateparse.ParseAny(s.CreatedAt)
@@ -61,14 +61,14 @@ func (s *SmartEmailDetails) ToSmartEmailDetails() (*transactional.SmartEmailDeta
 
 	from, err := mail.ParseAddress(s.Properties.From)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse the From address: %w", err)
+		return nil, fmt.Errorf("invalid From address: %w", err)
 	}
 
 	var replyTo *mail.Address
 	if len(strings.TrimSpace(s.Properties.ReplyTo)) > 0 {
 		replyTo, err = mail.ParseAddress(s.Properties.ReplyTo)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse the ReplyTo address: %w", err)
+			return nil, fmt.Errorf("invalid ReplyTo address: %w", err)
 		}
 	}
 
