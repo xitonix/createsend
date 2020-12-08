@@ -73,6 +73,15 @@ func TestWithAccountsAPI(t *testing.T) {
 	}
 }
 
+func TestWithTransactionalAPI(t *testing.T) {
+	ops := defaultOptions()
+	option := WithTransactionalAPI(&transactionalAPI{})
+	option(ops)
+	if ops.transactional == nil {
+		t.Error("Transactional API was nil")
+	}
+}
+
 func TestWithCampaignsAPI(t *testing.T) {
 	ops := defaultOptions()
 	option := WithCampaignsAPI(&campaignsAPI{})

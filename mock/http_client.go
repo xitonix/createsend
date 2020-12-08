@@ -3,6 +3,7 @@ package mock
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 )
@@ -14,9 +15,10 @@ type result struct {
 
 // HTTPClientMock represents a mocked HTTP client.
 type HTTPClientMock struct {
-	options *Options
-	lock    sync.Mutex
-	calls   map[string]*result
+	options   *Options
+	lock      sync.Mutex
+	calls     map[string]*result
+	requested *url.URL
 }
 
 // NewHTTPClientMock creates a new instance of a mocked HTTP client.
@@ -51,6 +53,7 @@ func (h *HTTPClientMock) Do(request *http.Request) (*http.Response, error) {
 	if h.options.callback != nil {
 		h.options.callback(request)
 	}
+	h.requested = request.URL
 	call, ok := h.calls[request.URL.Path]
 	if !ok {
 		return nil, fmt.Errorf("no mocked response has been setup for %s. make sure you call SetResponse method first", request.URL.Path)
@@ -60,6 +63,13 @@ func (h *HTTPClientMock) Do(request *http.Request) (*http.Response, error) {
 		return nil, ErrDeliberate
 	}
 	return call.response, nil
+}
+
+// LastRequest returns the URL of the last requested resource.
+func (h *HTTPClientMock) LastRequest() *url.URL {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+	return h.requested
 }
 
 // Count returns number of times the specified path was hit.

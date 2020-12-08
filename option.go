@@ -9,6 +9,7 @@ import (
 	"github.com/xitonix/createsend/accounts"
 	"github.com/xitonix/createsend/campaigns"
 	"github.com/xitonix/createsend/clients"
+	"github.com/xitonix/createsend/transactional"
 )
 
 const (
@@ -21,13 +22,14 @@ type Option func(*Options)
 
 // Options client configurations.
 type Options struct {
-	client    HTTPClient
-	auth      *authentication
-	baseURL   string
-	accounts  accounts.API
-	clients   clients.API
-	campaigns campaigns.API
-	ctx       context.Context
+	client        HTTPClient
+	auth          *authentication
+	baseURL       string
+	accounts      accounts.API
+	clients       clients.API
+	transactional transactional.API
+	campaigns     campaigns.API
+	ctx           context.Context
 }
 
 func defaultOptions() *Options {
@@ -58,6 +60,15 @@ func WithClientsAPI(api clients.API) Option {
 func WithAccountsAPI(api accounts.API) Option {
 	return func(options *Options) {
 		options.accounts = api
+	}
+}
+
+// WithTransactionalAPI overrides the internal object for accessing Transactional API.
+//
+// You can override the API to mock out Transactional API methods altogether.
+func WithTransactionalAPI(api transactional.API) Option {
+	return func(options *Options) {
+		options.transactional = api
 	}
 }
 
