@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/google/go-cmp/cmp"
 	"github.com/xitonix/createsend/campaigns"
+	"github.com/xitonix/createsend/mock"
 	"github.com/xitonix/createsend/order"
 	"io/ioutil"
 	"net/http"
@@ -11,7 +12,317 @@ import (
 	"time"
 )
 
-func TestClientsAPI_Summary(t *testing.T) {
+func TestCampaignsAPI_Create(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		input                campaigns.WithURLs
+		expectedResult       string
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "successful execution",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`"campaign_id"`)),
+			},
+			expectedResult: "campaign_id",
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("campaigns/client_id.json", tC.response)
+			actual, err := client.Campaigns().Create("client_id", tC.input)
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if err == nil && tC.expectedError != nil {
+				t.Errorf("Expected error '%v', received none", tC.expectedError)
+			}
+			if actual != tC.expectedResult {
+				t.Errorf("Expected: %v, Actual: %v", tC.expectedResult, actual)
+			}
+		})
+	}
+}
+
+func TestCampaignsAPI_Delete(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		expectedResult       string
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "successful execution",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`"campaign_id"`)),
+			},
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("campaigns/campaign_id.json", tC.response)
+			err := client.Campaigns().Delete("campaign_id")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if err == nil && tC.expectedError != nil {
+				t.Errorf("Expected error '%v', received none", tC.expectedError)
+			}
+		})
+	}
+}
+
+func TestCampaignsAPI_Unschedule(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		expectedResult       string
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "successful execution",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`"campaign_id"`)),
+			},
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("campaigns/campaign_id/unschedule.json", tC.response)
+			err := client.Campaigns().Unschedule("campaign_id")
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if err == nil && tC.expectedError != nil {
+				t.Errorf("Expected error '%v', received none", tC.expectedError)
+			}
+		})
+	}
+}
+
+func TestCampaignsAPI_Send(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		input                []string
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "successful execution",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`"campaign_id"`)),
+			},
+			input: []string{"email1@testing.com", "email2@testing.com"},
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("campaigns/campaign_id/send.json", tC.response)
+			err := client.Campaigns().Send("campaign_id", tC.input...)
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if err == nil && tC.expectedError != nil {
+				t.Errorf("Expected error '%v', received none", tC.expectedError)
+			}
+		})
+	}
+}
+
+func TestCampaignsAPI_SendAt(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		input1               []string
+		input2               time.Time
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "successful execution",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`"campaign_id"`)),
+			},
+			input1: []string{"email1@testing.com", "email2@testing.com"},
+			input2: time.Date(2060, 05, 20, 16, 45, 00, 00, time.UTC),
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("campaigns/campaign_id/send.json", tC.response)
+			err := client.Campaigns().SendAt("campaign_id", tC.input2, tC.input1...)
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if err == nil && tC.expectedError != nil {
+				t.Errorf("Expected error '%v', received none", tC.expectedError)
+			}
+		})
+	}
+}
+
+func TestCampaignsAPI_SendPreview(t *testing.T) {
+	testCases := []struct {
+		title                string
+		forceHTTPClientError bool
+		response             *http.Response
+		expectedError        error
+		input                []string
+		oAuthAuthentication  bool
+	}{
+		{
+			title: "successful execution",
+			response: &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`"campaign_id"`)),
+			},
+			input: []string{"email1@testing.com", "email2@testing.com"},
+		},
+		{
+			title:                "simulate remote call failure",
+			response:             &http.Response{},
+			forceHTTPClientError: true,
+			expectedError:        mock.ErrDeliberate,
+		},
+		{
+			title: "simulate server side error",
+			response: &http.Response{
+				StatusCode: 500,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"Message":"msg", "Code":500}`)),
+			},
+			expectedError: &Error{Code: 500},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, tC.oAuthAuthentication, tC.forceHTTPClientError)
+			httpClient.SetResponse("campaigns/campaign_id/sendpreview.json", tC.response)
+			err := client.Campaigns().SendPreview("campaign_id", tC.input...)
+			if err != nil {
+				if !checkError(err, tC.expectedError) {
+					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
+				}
+				checkErrorType(t, err, !tC.forceHTTPClientError)
+			}
+			if err == nil && tC.expectedError != nil {
+				t.Errorf("Expected error '%v', received none", tC.expectedError)
+			}
+		})
+	}
+}
+
+func TestCampaignsAPI_Summary(t *testing.T) {
 	testCases := []struct {
 		title                 string
 		expectClientSideError bool
@@ -91,7 +402,7 @@ func TestClientsAPI_Summary(t *testing.T) {
 	}
 }
 
-func TestClientsAPI_EmailClientUsage(t *testing.T) {
+func TestCampaignsAPI_EmailClientUsage(t *testing.T) {
 	testCases := []struct {
 		title                 string
 		expectClientSideError bool
@@ -193,7 +504,7 @@ func TestClientsAPI_EmailClientUsage(t *testing.T) {
 	}
 }
 
-func TestClientsAPI_ListsAndSegments(t *testing.T) {
+func TestCampaignsAPI_ListsAndSegments(t *testing.T) {
 	testCases := []struct {
 		title                 string
 		expectClientSideError bool
@@ -297,7 +608,7 @@ func TestClientsAPI_ListsAndSegments(t *testing.T) {
 	}
 }
 
-func TestClientsAPI_SentCampaignRecipients(t *testing.T) {
+func TestCampaignsAPI_SentCampaignRecipients(t *testing.T) {
 	testCases := []struct {
 		title                 string
 		expectClientSideError bool
@@ -423,7 +734,7 @@ func TestClientsAPI_SentCampaignRecipients(t *testing.T) {
 	}
 }
 
-func TestClientsAPI_SentCampaignRecipients_DoesNotSupportDateOrder(t *testing.T) {
+func TestCampaignsAPI_SentCampaignRecipients_DoesNotSupportDateOrder(t *testing.T) {
 	expectedError := newClientError(ErrCodeInvalidDateOrderField)
 	client, _ := createClient(t, true, false)
 	_, err := client.Campaigns().Recipients("campaign_id", 1, 100, order.Date, order.DESC)
@@ -432,7 +743,7 @@ func TestClientsAPI_SentCampaignRecipients_DoesNotSupportDateOrder(t *testing.T)
 	}
 }
 
-func TestClientsAPI_Bounces(t *testing.T) {
+func TestCampaignsAPI_Bounces(t *testing.T) {
 	testCases := []struct {
 		title                 string
 		expectClientSideError bool
@@ -558,7 +869,7 @@ func TestClientsAPI_Bounces(t *testing.T) {
 	}
 }
 
-func TestClientsAPI_Unsubscribes(t *testing.T) {
+func TestCampaignsAPI_Unsubscribes(t *testing.T) {
 	testCases := []struct {
 		title                 string
 		expectClientSideError bool
@@ -708,7 +1019,7 @@ func TestClientsAPI_Unsubscribes(t *testing.T) {
 	}
 }
 
-func TestClientsAPI_Opens(t *testing.T) {
+func TestCampaignsAPI_Opens(t *testing.T) {
 	testCases := []struct {
 		title                 string
 		expectClientSideError bool
@@ -858,7 +1169,7 @@ func TestClientsAPI_Opens(t *testing.T) {
 	}
 }
 
-func TestClientsAPI_Clicks(t *testing.T) {
+func TestCampaignsAPI_Clicks(t *testing.T) {
 	testCases := []struct {
 		title                 string
 		expectClientSideError bool
@@ -1012,7 +1323,7 @@ func TestClientsAPI_Clicks(t *testing.T) {
 	}
 }
 
-func TestClientsAPI_SpamComplaints(t *testing.T) {
+func TestCampaignsAPI_SpamComplaints(t *testing.T) {
 	testCases := []struct {
 		title                 string
 		expectClientSideError bool
