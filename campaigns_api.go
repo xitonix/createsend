@@ -30,21 +30,11 @@ func (c *campaignsAPI) Create(clientID string, campaign campaigns.WithURLs) (str
 	return cID, nil
 }
 
-func (c *campaignsAPI) CreateFromTemplate(clientID string, campaign campaigns.Template) (string, error) {
-	path := fmt.Sprintf("campaigns/%s/fromtemplate.json", url.QueryEscape(clientID))
-	var cID string
-	err := c.client.Post(path, &cID, campaign)
-	if err != nil {
-		return "", err
-	}
-	return cID, nil
+func (c *campaignsAPI) Send(campaignID string, confirmationEmails ...string) error {
+	return c.SendAt(campaignID, time.Time{}, confirmationEmails...)
 }
 
-func (c *campaignsAPI) Send(draftCampaignID string, confirmationEmails ...string) error {
-	return c.SendAt(draftCampaignID, time.Time{}, confirmationEmails...)
-}
-
-func (c *campaignsAPI) SendAt(draftCampaignID string, at time.Time, confirmationEmails ...string) error {
+func (c *campaignsAPI) SendAt(campaignID string, at time.Time, confirmationEmails ...string) error {
 	request := struct {
 		ConfirmationEmail string
 		SendDate          string
@@ -55,18 +45,18 @@ func (c *campaignsAPI) SendAt(draftCampaignID string, at time.Time, confirmation
 	if !at.IsZero() {
 		request.SendDate = at.Format("2006-01-02 15:04")
 	}
-	path := fmt.Sprintf("campaigns/%s/send.json", url.QueryEscape(draftCampaignID))
+	path := fmt.Sprintf("campaigns/%s/send.json", url.QueryEscape(campaignID))
 
 	return c.client.Post(path, nil, request)
 }
 
-func (c *campaignsAPI) SendPreview(draftCampaignID string, recipients ...string) error {
+func (c *campaignsAPI) SendPreview(campaignID string, recipients ...string) error {
 	request := struct {
 		PreviewRecipients []string
 	}{
 		PreviewRecipients: recipients,
 	}
-	path := fmt.Sprintf("campaigns/%s/sendpreview.json", url.QueryEscape(draftCampaignID))
+	path := fmt.Sprintf("campaigns/%s/sendpreview.json", url.QueryEscape(campaignID))
 
 	return c.client.Post(path, nil, request)
 }
@@ -320,7 +310,8 @@ func (c *campaignsAPI) Delete(campaignID string) error {
 }
 
 func (c *campaignsAPI) Unschedule(campaignID string) error {
-	return c.client.Delete(fmt.Sprintf("campaigns/%s/unschedule.json", campaignID))
+	path := fmt.Sprintf("campaigns/%s/unschedule.json", campaignID)
+	return c.client.Post(path, nil, campaignID)
 }
 
 func getRecipientActivityPath(action string, campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) string {

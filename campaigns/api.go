@@ -23,7 +23,7 @@ type API interface {
 	// or in the process of sending, this operation will fail.
 	Unschedule(campaignID string) error
 	// SendPreview send a test preview campaign
-	SendPreview(draftCampaignID string, recipients ...string) error
+	SendPreview(campaignID string, recipients ...string) error
 	// Summary gets the reporting summary data for the specified campaign
 	Summary(campaignID string) (Summary, error)
 	// EmailClientUsage lists the email clients subscribers used to open the campaign

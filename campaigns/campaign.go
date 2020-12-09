@@ -23,7 +23,7 @@ type WithURLs struct {
 	// BasicDetails the basic details of a campaign
 	BasicDetails
 	// Html the URL of the HTML content
-	Html string
+	Html string `json:"HtmlUrl"`
 	// Text the URL of the HTML content
-	Text string
+	Text string `json:"TextUrl"`
 }
