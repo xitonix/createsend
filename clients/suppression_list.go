@@ -24,16 +24,6 @@ type SuppressionList struct {
 	Entries []*SuppressionDetails
 	// OrderedBy the field by which the result set was ordered (email/date).
 	OrderedBy order.SuppressionListField
-	// OrderDirection the order in which the results were sorted.
-	OrderDirection order.Direction
-	// PageNumber the current page number.
-	PageNumber int
-	// PageSize the page size.
-	PageSize int
-	// RecordsOnThisPage the number of records on this page.
-	RecordsOnThisPage int
-	// TotalNumberOfRecords the total number of records.
-	TotalNumberOfRecords int
-	// NumberOfPages the total number of pages.
-	NumberOfPages int
+	// Page paginated result details
+	Page order.Page
 }

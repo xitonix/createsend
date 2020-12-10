@@ -22,6 +22,8 @@ const (
 	ErrCodeInvalidJSON ClientErrorCode = -8
 	// ErrCodeInvalidRequestBody the provided request was invalid.
 	ErrCodeInvalidRequestBody ClientErrorCode = -9
+	// ErrCodeInvalidDateOrderField the provided date order field is invalid.
+	ErrCodeInvalidDateOrderField ClientErrorCode = -10
 )
 
 // String returns the string representation of the error code.
@@ -43,6 +45,8 @@ func (c ClientErrorCode) String() string {
 		return "invalid JSON data"
 	case ErrCodeInvalidRequestBody:
 		return "invalid request body"
+	case ErrCodeInvalidDateOrderField:
+		return "date is not a valid order field"
 	default:
 		return "data processing error"
 	}

@@ -45,6 +45,10 @@ func TestNewClient(t *testing.T) {
 			if client.Clients() == nil {
 				t.Errorf("Clients API should not be nil")
 			}
+
+			if client.Campaigns() == nil {
+				t.Errorf("Campaigns API should not be nil")
+			}
 		})
 	}
 }

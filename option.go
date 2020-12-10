@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/xitonix/createsend/accounts"
+	"github.com/xitonix/createsend/campaigns"
 	"github.com/xitonix/createsend/clients"
 	"github.com/xitonix/createsend/transactional"
 )
@@ -27,6 +28,7 @@ type Options struct {
 	accounts      accounts.API
 	clients       clients.API
 	transactional transactional.API
+	campaigns     campaigns.API
 	ctx           context.Context
 }
 
@@ -67,6 +69,15 @@ func WithAccountsAPI(api accounts.API) Option {
 func WithTransactionalAPI(api transactional.API) Option {
 	return func(options *Options) {
 		options.transactional = api
+	}
+}
+
+// WithCampaignsAPI overrides the internal object for accessing Campaign API.
+//
+// You can override the API to mock out Campaign API methods altogether.
+func WithCampaignsAPI(api campaigns.API) Option {
+	return func(options *Options) {
+		options.campaigns = api
 	}
 }
 

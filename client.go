@@ -2,6 +2,7 @@ package createsend
 
 import (
 	"github.com/xitonix/createsend/accounts"
+	"github.com/xitonix/createsend/campaigns"
 	"github.com/xitonix/createsend/clients"
 	"github.com/xitonix/createsend/transactional"
 )
@@ -11,6 +12,7 @@ type Client struct {
 	accounts      accounts.API
 	clients       clients.API
 	transactional transactional.API
+	campaigns     campaigns.API
 }
 
 // New creates a new client.
@@ -38,6 +40,10 @@ func New(options ...Option) (*Client, error) {
 		client.transactional = newTransactionalAPI(hc)
 	}
 
+	if opts.campaigns == nil {
+		client.campaigns = newCampaignAPI(hc)
+	}
+
 	return client, nil
 }
 
@@ -54,4 +60,9 @@ func (c *Client) Clients() clients.API {
 // Transactional accesses Campaign Monitor's Transactional API.
 func (c *Client) Transactional() transactional.API {
 	return c.transactional
+}
+
+// Campaigns accesses the Campaign Monitor campaigns API.
+func (c *Client) Campaigns() campaigns.API {
+	return c.campaigns
 }
