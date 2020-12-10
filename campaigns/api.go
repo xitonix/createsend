@@ -25,11 +25,11 @@ type API interface {
 	// SendPreview send a test preview campaign
 	SendPreview(campaignID string, recipients ...string) error
 	// Summary gets the reporting summary data for the specified campaign
-	Summary(campaignID string) (Summary, error)
+	Summary(campaignID string) (*Summary, error)
 	// EmailClientUsage lists the email clients subscribers used to open the campaign
-	EmailClientUsage(campaignID string) ([]EmailClientUsage, error)
+	EmailClientUsage(campaignID string) ([]*EmailClientUsage, error)
 	// ListsAndSegments returns the lists and segments any campaign was sent to
-	ListsAndSegments(campaignID string) (ListsAndSegments, error)
+	ListsAndSegments(campaignID string) (*ListsAndSegments, error)
 	// Recipients Retrieves a paged result representing all the subscribers that a given  campaign was sent to. This
 	// includes their email address and the ID of the list they are a member of.
 	// You have complete control over how results should be returned including page size, sort order and sort direction
@@ -43,27 +43,27 @@ type API interface {
 	// orderField The field which should be used to order the results
 	//
 	// orderDirection The direction in which results should be ordered
-	Recipients(campaignID string, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (Recipients, error)
+	Recipients(campaignID string, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*Recipients, error)
 	// Bounces Retrieves a paged result representing all the subscribers who bounced for a given campaign, and the type
 	// of bounce (Hard = Hard Bounce, Soft = Soft Bounce).
 	// The date field is optional, opens on or after the date value specified will be returned.
-	Bounces(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (Bounces, error)
+	Bounces(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*Bounces, error)
 	// Opens Retrieves a paged result representing all subscribers who opened a given campaign, including the date/time
 	// and IP address from which they opened the campaign. When possible, the latitude, longitude, city, region, country
 	// code, and country name as geocoded from the IP address, are also returned. You have complete control over how
 	// results should be returned including page size, sort order and sort direction. The date field is optional, opens
 	// on or after the date value specified will be returned.
-	Opens(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (Opens, error)
+	Opens(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*Opens, error)
 	// Clicks Retrieves a paged result representing all subscribers who clicked a link in a given campaign.
 	// The date field is optional, opens on or after the date value specified will be returned.
-	Clicks(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (Clicks, error)
+	Clicks(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*Clicks, error)
 	// Unsubscribes Retrieves a paged result representing all subscribers who unsubscribed from the email for a
 	// given campaign.
 	// The date field is optional, opens on or after the date value specified will be returned.
-	Unsubscribes(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (Unsubscribes, error)
+	Unsubscribes(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*Unsubscribes, error)
 	// SpamComplaints Retrieves a paged result representing all subscribers who marked the given campaign as spam,
 	// including the subscriber’s list ID and the date/time they marked the campaign as spam.
 	// You have complete control over how results should be returned including page size, sort order and sort direction.
 	// The date field is optional, opens on or after the date value specified will be returned.
-	SpamComplaints(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (SpamComplaints, error)
+	SpamComplaints(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*SpamComplaints, error)
 }

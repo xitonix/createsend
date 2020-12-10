@@ -328,7 +328,7 @@ func TestCampaignsAPI_Summary(t *testing.T) {
 		title                 string
 		expectClientSideError bool
 		response              *http.Response
-		expected              campaigns.Summary
+		expected              *campaigns.Summary
 		expectedError         error
 	}{
 		{
@@ -337,7 +337,7 @@ func TestCampaignsAPI_Summary(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`{}`)),
 			},
-			expected: campaigns.Summary{},
+			expected: &campaigns.Summary{},
 		},
 		{
 			title: "some email client usage",
@@ -359,7 +359,7 @@ func TestCampaignsAPI_Summary(t *testing.T) {
 					"Mentions": 11
 				}`)),
 			},
-			expected: campaigns.Summary{
+			expected: &campaigns.Summary{
 				Recipients:        1000,
 				TotalOpened:       345,
 				Clicks:            132,
@@ -408,7 +408,7 @@ func TestCampaignsAPI_EmailClientUsage(t *testing.T) {
 		title                 string
 		expectClientSideError bool
 		response              *http.Response
-		expected              []campaigns.EmailClientUsage
+		expected              []*campaigns.EmailClientUsage
 		expectedError         error
 	}{
 		{
@@ -417,7 +417,7 @@ func TestCampaignsAPI_EmailClientUsage(t *testing.T) {
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`[]`)),
 			},
-			expected: []campaigns.EmailClientUsage{},
+			expected: []*campaigns.EmailClientUsage{},
 		},
 		{
 			title: "some email client usage",
@@ -450,7 +450,7 @@ func TestCampaignsAPI_EmailClientUsage(t *testing.T) {
 					}
 				]`)),
 			},
-			expected: []campaigns.EmailClientUsage{
+			expected: []*campaigns.EmailClientUsage{
 				{
 					Client:      "iOS Devices",
 					Version:     "iPhone",
@@ -510,7 +510,7 @@ func TestCampaignsAPI_ListsAndSegments(t *testing.T) {
 		title                 string
 		expectClientSideError bool
 		response              *http.Response
-		expected              campaigns.ListsAndSegments
+		expected              *campaigns.ListsAndSegments
 		expectedError         error
 	}{
 		{
@@ -522,7 +522,7 @@ func TestCampaignsAPI_ListsAndSegments(t *testing.T) {
 					"Segments": []
 				}`)),
 			},
-			expected: campaigns.ListsAndSegments{
+			expected: &campaigns.ListsAndSegments{
 				Lists:    []campaigns.List{},
 				Segments: []campaigns.Segment{},
 			},
@@ -556,7 +556,7 @@ func TestCampaignsAPI_ListsAndSegments(t *testing.T) {
 					]
 				}`)),
 			},
-			expected: campaigns.ListsAndSegments{
+			expected: &campaigns.ListsAndSegments{
 				Lists: []campaigns.List{
 					{
 						Name: "My List 1",
@@ -614,7 +614,7 @@ func TestCampaignsAPI_SentCampaignRecipients(t *testing.T) {
 		title                 string
 		expectClientSideError bool
 		response              *http.Response
-		expected              campaigns.Recipients
+		expected              *campaigns.Recipients
 		expectedError         error
 	}{
 		{
@@ -632,7 +632,7 @@ func TestCampaignsAPI_SentCampaignRecipients(t *testing.T) {
 					"NumberOfPages": 0
 				}`)),
 			},
-			expected: campaigns.Recipients{
+			expected: &campaigns.Recipients{
 				Results:   []campaigns.Recipient{},
 				OrderedBy: order.List,
 				Page: order.Page{
@@ -677,7 +677,7 @@ func TestCampaignsAPI_SentCampaignRecipients(t *testing.T) {
 					"NumberOfPages": 1
 				}`)),
 			},
-			expected: campaigns.Recipients{
+			expected: &campaigns.Recipients{
 				Results: []campaigns.Recipient{
 					{
 						EmailAddress: "example+1@example.com",
@@ -749,7 +749,7 @@ func TestCampaignsAPI_Bounces(t *testing.T) {
 		title                 string
 		expectClientSideError bool
 		response              *http.Response
-		expected              campaigns.Bounces
+		expected              *campaigns.Bounces
 		expectedError         error
 	}{
 		{
@@ -767,7 +767,7 @@ func TestCampaignsAPI_Bounces(t *testing.T) {
 					"NumberOfPages": 0
 				}`)),
 			},
-			expected: campaigns.Bounces{
+			expected: &campaigns.Bounces{
 				Results:   []campaigns.Bounce{},
 				OrderedBy: order.Date,
 				Page: order.Page{
@@ -810,7 +810,7 @@ func TestCampaignsAPI_Bounces(t *testing.T) {
 					"NumberOfPages": 1
 				}`)),
 			},
-			expected: campaigns.Bounces{
+			expected: &campaigns.Bounces{
 				Results: []campaigns.Bounce{
 					{
 						Recipient: campaigns.Recipient{
@@ -925,7 +925,7 @@ func TestCampaignsAPI_Unsubscribes(t *testing.T) {
 		title                 string
 		expectClientSideError bool
 		response              *http.Response
-		expected              campaigns.Unsubscribes
+		expected              *campaigns.Unsubscribes
 		expectedError         error
 	}{
 		{
@@ -943,7 +943,7 @@ func TestCampaignsAPI_Unsubscribes(t *testing.T) {
 					"NumberOfPages": 0
 				}`)),
 			},
-			expected: campaigns.Unsubscribes{
+			expected: &campaigns.Unsubscribes{
 				Results:   []campaigns.Unsubscribe{},
 				OrderedBy: order.Date,
 				Page: order.Page{
@@ -996,7 +996,7 @@ func TestCampaignsAPI_Unsubscribes(t *testing.T) {
 					"NumberOfPages": 1
 				}`)),
 			},
-			expected: campaigns.Unsubscribes{
+			expected: &campaigns.Unsubscribes{
 				Results: []campaigns.Unsubscribe{
 					{
 						Recipient: campaigns.Recipient{
@@ -1123,7 +1123,7 @@ func TestCampaignsAPI_Opens(t *testing.T) {
 		title                 string
 		expectClientSideError bool
 		response              *http.Response
-		expected              campaigns.Opens
+		expected              *campaigns.Opens
 		expectedError         error
 	}{
 		{
@@ -1141,7 +1141,7 @@ func TestCampaignsAPI_Opens(t *testing.T) {
 					"NumberOfPages": 0
 				}`)),
 			},
-			expected: campaigns.Opens{
+			expected: &campaigns.Opens{
 				Results:   []campaigns.OpenDetails{},
 				OrderedBy: order.Date,
 				Page: order.Page{
@@ -1194,7 +1194,7 @@ func TestCampaignsAPI_Opens(t *testing.T) {
 					"NumberOfPages": 1
 				}`)),
 			},
-			expected: campaigns.Opens{
+			expected: &campaigns.Opens{
 				Results: []campaigns.OpenDetails{
 					{
 						Recipient: campaigns.Recipient{
@@ -1327,7 +1327,7 @@ func TestCampaignsAPI_Clicks(t *testing.T) {
 		title                 string
 		expectClientSideError bool
 		response              *http.Response
-		expected              campaigns.Clicks
+		expected              *campaigns.Clicks
 		expectedError         error
 	}{
 		{
@@ -1345,7 +1345,7 @@ func TestCampaignsAPI_Clicks(t *testing.T) {
 					"NumberOfPages": 0
 				}`)),
 			},
-			expected: campaigns.Clicks{
+			expected: &campaigns.Clicks{
 				Results:   []campaigns.ClickDetails{},
 				OrderedBy: order.Date,
 				Page: order.Page{
@@ -1400,7 +1400,7 @@ func TestCampaignsAPI_Clicks(t *testing.T) {
 					"NumberOfPages": 1
 				}`)),
 			},
-			expected: campaigns.Clicks{
+			expected: &campaigns.Clicks{
 				Results: []campaigns.ClickDetails{
 					{
 						Recipient: campaigns.Recipient{
@@ -1536,7 +1536,7 @@ func TestCampaignsAPI_SpamComplaints(t *testing.T) {
 		title                 string
 		expectClientSideError bool
 		response              *http.Response
-		expected              campaigns.SpamComplaints
+		expected              *campaigns.SpamComplaints
 		expectedError         error
 	}{
 		{
@@ -1554,7 +1554,7 @@ func TestCampaignsAPI_SpamComplaints(t *testing.T) {
 					"NumberOfPages": 0
 				}`)),
 			},
-			expected: campaigns.SpamComplaints{
+			expected: &campaigns.SpamComplaints{
 				Results:   []campaigns.SpamComplaint{},
 				OrderedBy: order.Date,
 				Page: order.Page{
@@ -1603,7 +1603,7 @@ func TestCampaignsAPI_SpamComplaints(t *testing.T) {
 					"NumberOfPages": 1
 				}`)),
 			},
-			expected: campaigns.SpamComplaints{
+			expected: &campaigns.SpamComplaints{
 				Results: []campaigns.SpamComplaint{
 					{
 						Recipient: campaigns.Recipient{

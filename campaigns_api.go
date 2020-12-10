@@ -61,20 +61,20 @@ func (c *campaignsAPI) SendPreview(campaignID string, recipients ...string) erro
 	return c.client.Post(path, nil, request)
 }
 
-func (c *campaignsAPI) Summary(campaignID string) (campaigns.Summary, error) {
+func (c *campaignsAPI) Summary(campaignID string) (*campaigns.Summary, error) {
 	path := fmt.Sprintf("campaigns/%s/summary.json", url.QueryEscape(campaignID))
 	var cs campaigns.Summary
 	err := c.client.Get(path, &cs)
 	if err != nil {
-		return campaigns.Summary{}, err
+		return nil, err
 	}
 
-	return cs, nil
+	return &cs, nil
 }
 
-func (c *campaignsAPI) EmailClientUsage(campaignID string) ([]campaigns.EmailClientUsage, error) {
+func (c *campaignsAPI) EmailClientUsage(campaignID string) ([]*campaigns.EmailClientUsage, error) {
 	path := fmt.Sprintf("campaigns/%s/emailclientusage.json", url.QueryEscape(campaignID))
-	var ecu []campaigns.EmailClientUsage
+	var ecu []*campaigns.EmailClientUsage
 	err := c.client.Get(path, &ecu)
 	if err != nil {
 		return nil, err
@@ -83,20 +83,20 @@ func (c *campaignsAPI) EmailClientUsage(campaignID string) ([]campaigns.EmailCli
 	return ecu, nil
 }
 
-func (c *campaignsAPI) ListsAndSegments(campaignID string) (campaigns.ListsAndSegments, error) {
+func (c *campaignsAPI) ListsAndSegments(campaignID string) (*campaigns.ListsAndSegments, error) {
 	path := fmt.Sprintf("campaigns/%s/listsandsegments.json", url.QueryEscape(campaignID))
 	var ls campaigns.ListsAndSegments
 	err := c.client.Get(path, &ls)
 	if err != nil {
-		return campaigns.ListsAndSegments{}, err
+		return nil, err
 	}
 
-	return ls, nil
+	return &ls, nil
 }
 
-func (c *campaignsAPI) Recipients(campaignID string, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.Recipients, error) {
+func (c *campaignsAPI) Recipients(campaignID string, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*campaigns.Recipients, error) {
 	if orderField == order.Date {
-		return campaigns.Recipients{}, newClientError(ErrCodeInvalidDateOrderField)
+		return nil, newClientError(ErrCodeInvalidDateOrderField)
 	}
 
 	var t struct {
@@ -110,10 +110,10 @@ func (c *campaignsAPI) Recipients(campaignID string, page int, pageSize int, ord
 	path := getRecipientActivityPath("recipients", campaignID, time.Time{}, page, pageSize, orderField, orderDirection)
 	err := c.client.Get(path, &t)
 	if err != nil {
-		return campaigns.Recipients{}, err
+		return nil, err
 	}
 
-	r := campaigns.Recipients{
+	r := &campaigns.Recipients{
 		Results:   make([]campaigns.Recipient, len(t.Results)),
 		OrderedBy: t.ResultsOrderedBy,
 		Page:      t.Page,
@@ -125,7 +125,7 @@ func (c *campaignsAPI) Recipients(campaignID string, page int, pageSize int, ord
 	return r, nil
 }
 
-func (c *campaignsAPI) Bounces(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.Bounces, error) {
+func (c *campaignsAPI) Bounces(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*campaigns.Bounces, error) {
 	path := getRecipientActivityPath("bounces", campaignID, date, page, pageSize, orderField, orderDirection)
 	var t struct {
 		Results []struct {
@@ -140,10 +140,10 @@ func (c *campaignsAPI) Bounces(campaignID string, date time.Time, page int, page
 
 	err := c.client.Get(path, &t)
 	if err != nil {
-		return campaigns.Bounces{}, err
+		return nil, err
 	}
 
-	b := campaigns.Bounces{
+	b := &campaigns.Bounces{
 		Results:   make([]campaigns.Bounce, len(t.Results)),
 		OrderedBy: t.ResultsOrderedBy,
 		Page:      t.Page,
@@ -154,14 +154,14 @@ func (c *campaignsAPI) Bounces(campaignID string, date time.Time, page int, page
 		b.Results[i].Reason = t.Results[i].Reason
 		b.Results[i].Date, err = dateparse.ParseAny(t.Results[i].Date)
 		if err != nil {
-			return campaigns.Bounces{}, err
+			return nil, err
 		}
 	}
 
 	return b, nil
 }
 
-func (c *campaignsAPI) Opens(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.Opens, error) {
+func (c *campaignsAPI) Opens(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*campaigns.Opens, error) {
 	path := getRecipientActivityPath("opens", campaignID, date, page, pageSize, orderField, orderDirection)
 	var t struct {
 		Results []struct {
@@ -174,10 +174,10 @@ func (c *campaignsAPI) Opens(campaignID string, date time.Time, page int, pageSi
 	}
 	err := c.client.Get(path, &t)
 	if err != nil {
-		return campaigns.Opens{}, err
+		return nil, err
 	}
 
-	op := campaigns.Opens{
+	op := &campaigns.Opens{
 		Results:   make([]campaigns.OpenDetails, len(t.Results)),
 		OrderedBy: t.ResultsOrderedBy,
 		Page:      t.Page,
@@ -193,14 +193,14 @@ func (c *campaignsAPI) Opens(campaignID string, date time.Time, page int, pageSi
 		op.Results[i].CountryName = t.Results[i].CountryName
 		op.Results[i].Date, err = dateparse.ParseAny(t.Results[i].Date)
 		if err != nil {
-			return campaigns.Opens{}, err
+			return nil, err
 		}
 	}
 
 	return op, nil
 }
 
-func (c *campaignsAPI) Clicks(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.Clicks, error) {
+func (c *campaignsAPI) Clicks(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*campaigns.Clicks, error) {
 	path := getRecipientActivityPath("clicks", campaignID, date, page, pageSize, orderField, orderDirection)
 	var t struct {
 		Results []struct {
@@ -214,10 +214,10 @@ func (c *campaignsAPI) Clicks(campaignID string, date time.Time, page int, pageS
 	}
 	err := c.client.Get(path, &t)
 	if err != nil {
-		return campaigns.Clicks{}, err
+		return nil, err
 	}
 
-	cl := campaigns.Clicks{
+	cl := &campaigns.Clicks{
 		Results:   make([]campaigns.ClickDetails, len(t.Results)),
 		OrderedBy: t.ResultsOrderedBy,
 		Page:      t.Page,
@@ -234,14 +234,14 @@ func (c *campaignsAPI) Clicks(campaignID string, date time.Time, page int, pageS
 		cl.Results[i].CountryName = t.Results[i].CountryName
 		cl.Results[i].Date, err = dateparse.ParseAny(t.Results[i].Date)
 		if err != nil {
-			return campaigns.Clicks{}, err
+			return nil, err
 		}
 	}
 
 	return cl, nil
 }
 
-func (c *campaignsAPI) Unsubscribes(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.Unsubscribes, error) {
+func (c *campaignsAPI) Unsubscribes(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*campaigns.Unsubscribes, error) {
 	path := getRecipientActivityPath("unsubscribes", campaignID, date, page, pageSize, orderField, orderDirection)
 	var t struct {
 		Results []struct {
@@ -254,10 +254,10 @@ func (c *campaignsAPI) Unsubscribes(campaignID string, date time.Time, page int,
 	}
 	err := c.client.Get(path, &t)
 	if err != nil {
-		return campaigns.Unsubscribes{}, err
+		return nil, err
 	}
 
-	u := campaigns.Unsubscribes{
+	u := &campaigns.Unsubscribes{
 		Results:   make([]campaigns.Unsubscribe, len(t.Results)),
 		OrderedBy: t.ResultsOrderedBy,
 		Page:      t.Page,
@@ -267,14 +267,14 @@ func (c *campaignsAPI) Unsubscribes(campaignID string, date time.Time, page int,
 		u.Results[i].IPAddress = t.Results[i].IPAddress
 		u.Results[i].Date, err = dateparse.ParseAny(t.Results[i].Date)
 		if err != nil {
-			return campaigns.Unsubscribes{}, err
+			return nil, err
 		}
 	}
 
 	return u, nil
 }
 
-func (c *campaignsAPI) SpamComplaints(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (campaigns.SpamComplaints, error) {
+func (c *campaignsAPI) SpamComplaints(campaignID string, date time.Time, page int, pageSize int, orderField order.Field, orderDirection order.Direction) (*campaigns.SpamComplaints, error) {
 	path := getRecipientActivityPath("spam", campaignID, date, page, pageSize, orderField, orderDirection)
 	var t struct {
 		Results []struct {
@@ -286,10 +286,10 @@ func (c *campaignsAPI) SpamComplaints(campaignID string, date time.Time, page in
 	}
 	err := c.client.Get(path, &t)
 	if err != nil {
-		return campaigns.SpamComplaints{}, err
+		return nil, err
 	}
 
-	s := campaigns.SpamComplaints{
+	s := &campaigns.SpamComplaints{
 		Results:   make([]campaigns.SpamComplaint, len(t.Results)),
 		OrderedBy: t.ResultsOrderedBy,
 		Page:      t.Page,
@@ -298,7 +298,7 @@ func (c *campaignsAPI) SpamComplaints(campaignID string, date time.Time, page in
 		s.Results[i].Recipient = t.Results[i].Recipient
 		s.Results[i].Date, err = dateparse.ParseAny(t.Results[i].Date)
 		if err != nil {
-			return campaigns.SpamComplaints{}, err
+			return nil, err
 		}
 	}
 
