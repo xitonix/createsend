@@ -18,7 +18,7 @@ type Bounce struct {
 }
 
 type Bounces struct {
-	// Results represent basic details of a bounce
+	// Results represent basic details of all bounces
 	Results []Bounce
 	// OrderedBy the field by which the result set was ordered (email/list/date).
 	OrderedBy order.Field
