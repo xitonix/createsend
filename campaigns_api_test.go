@@ -856,7 +856,8 @@ func TestCampaignsAPI_Bounces(t *testing.T) {
 		t.Run(tC.title, func(t *testing.T) {
 			client, httpClient := createClient(t, true, false)
 			httpClient.SetResponse("campaigns/campaign_id/bounces.json", tC.response)
-			actual, err := client.Campaigns().Bounces("campaign_id", time.Time{}, 1, 100, order.Date, order.DESC)
+			bouncesSinceDate := time.Date(2000, 05, 20, 16, 45, 00, 00, time.UTC)
+			actual, err := client.Campaigns().Bounces("campaign_id", bouncesSinceDate, 1, 100, order.Date, order.DESC)
 			if err != nil {
 				if !checkError(err, tC.expectedError) {
 					t.Errorf("Expected '%v' error, actual: '%v'", tC.expectedError, err)
