@@ -2,6 +2,7 @@ package createsend
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/xitonix/createsend/campaigns"
 	"github.com/xitonix/createsend/mock"
@@ -869,6 +870,55 @@ func TestCampaignsAPI_Bounces(t *testing.T) {
 	}
 }
 
+func TestCampaignsAPI_BouncesDateParseError(t *testing.T) {
+	testCases := []struct {
+		title         string
+		response      *http.Response
+		expectedError error
+	}{
+		{
+			title: "invalid date to parse",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+						{
+							"EmailAddress": "example+1@example.com",
+							"ListID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+							"BounceType": "Hard",
+							"Date": "XYZ",
+							"Reason": "Invalid Email Address"
+						}
+					],
+					"ResultsOrderedBy": "date",
+					"OrderDirection": "desc",
+					"PageNumber": 1,
+					"PageSize": 100,
+					"RecordsOnThisPage": 4,
+					"TotalNumberOfRecords": 4,
+					"NumberOfPages": 1
+				}`)),
+			},
+			expectedError: fmt.Errorf("Could not find format for %q", "XYZ"),
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, true, false)
+			httpClient.SetResponse("campaigns/campaign_id/bounces.json", tC.response)
+			_, err := client.Campaigns().Bounces("campaign_id", time.Time{}, 1, 100, order.Date, order.DESC)
+			if err == nil {
+				t.Error("Expected date parse error, got none")
+				return
+			}
+			if err.Error() != tC.expectedError.Error() {
+				t.Errorf("Expected '%v', actual '%v'", tC.expectedError, err)
+			}
+		})
+	}
+}
+
 func TestCampaignsAPI_Unsubscribes(t *testing.T) {
 	testCases := []struct {
 		title                 string
@@ -1019,6 +1069,54 @@ func TestCampaignsAPI_Unsubscribes(t *testing.T) {
 	}
 }
 
+func TestCampaignsAPI_UnsubscribesDateParseError(t *testing.T) {
+	testCases := []struct {
+		title         string
+		response      *http.Response
+		expectedError error
+	}{
+		{
+			title: "invalid date to parse",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+						{
+							"EmailAddress": "example+1@example.com",
+							"ListID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+							"Date": "XYZ",
+							"IPAddress": "192.168.0.1"
+						}
+					],
+					"ResultsOrderedBy": "date",
+					"OrderDirection": "desc",
+					"PageNumber": 1,
+					"PageSize": 100,
+					"RecordsOnThisPage": 4,
+					"TotalNumberOfRecords": 4,
+					"NumberOfPages": 1
+				}`)),
+			},
+			expectedError: fmt.Errorf("Could not find format for %q", "XYZ"),
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, true, false)
+			httpClient.SetResponse("campaigns/campaign_id/unsubscribes.json", tC.response)
+			_, err := client.Campaigns().Unsubscribes("campaign_id", time.Time{}, 1, 100, order.Date, order.DESC)
+			if err == nil {
+				t.Error("Expected date parse error, got none")
+				return
+			}
+			if err.Error() != tC.expectedError.Error() {
+				t.Errorf("Expected '%v', actual '%v'", tC.expectedError, err)
+			}
+		})
+	}
+}
+
 func TestCampaignsAPI_Opens(t *testing.T) {
 	testCases := []struct {
 		title                 string
@@ -1164,6 +1262,60 @@ func TestCampaignsAPI_Opens(t *testing.T) {
 			}
 			if diff := cmp.Diff(tC.expected, actual); diff != "" {
 				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestCampaignsAPI_OpensDateParseError(t *testing.T) {
+	testCases := []struct {
+		title         string
+		response      *http.Response
+		expectedError error
+	}{
+		{
+			title: "invalid date to parse",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+						{
+							"EmailAddress": "example+1@example.com",
+							"ListID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+							"Date": "XYZ",
+							"IPAddress": "192.168.0.1",
+							"Latitude": -33.8683,
+							"Longitude": 151.2086,
+							"City": "Sydney",
+							"Region": "New South Wales",
+							"CountryCode": "AU",
+							"CountryName": "Australia"
+						}
+					],
+					"ResultsOrderedBy": "date",
+					"OrderDirection": "desc",
+					"PageNumber": 1,
+					"PageSize": 100,
+					"RecordsOnThisPage": 4,
+					"TotalNumberOfRecords": 4,
+					"NumberOfPages": 1
+				}`)),
+			},
+			expectedError: fmt.Errorf("Could not find format for %q", "XYZ"),
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, true, false)
+			httpClient.SetResponse("campaigns/campaign_id/opens.json", tC.response)
+			_, err := client.Campaigns().Opens("campaign_id", time.Time{}, 1, 100, order.Date, order.DESC)
+			if err == nil {
+				t.Error("Expected date parse error, got none")
+				return
+			}
+			if err.Error() != tC.expectedError.Error() {
+				t.Errorf("Expected '%v', actual '%v'", tC.expectedError, err)
 			}
 		})
 	}
@@ -1323,6 +1475,61 @@ func TestCampaignsAPI_Clicks(t *testing.T) {
 	}
 }
 
+func TestCampaignsAPI_ClicksDateParseError(t *testing.T) {
+	testCases := []struct {
+		title         string
+		response      *http.Response
+		expectedError error
+	}{
+		{
+			title: "invalid date to parse",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+						{
+							"EmailAddress": "example+1@example.com",
+							"URL": "http://www.myexammple.com/index.html",
+							"ListID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+							"Date": "XYZ",
+							"IPAddress": "192.168.0.1",
+							"Latitude": -33.8683,
+							"Longitude": 151.2086,
+							"City": "Sydney",
+							"Region": "New South Wales",
+							"CountryCode": "AU",
+							"CountryName": "Australia"
+						}
+					],
+					"ResultsOrderedBy": "date",
+					"OrderDirection": "desc",
+					"PageNumber": 1,
+					"PageSize": 100,
+					"RecordsOnThisPage": 4,
+					"TotalNumberOfRecords": 4,
+					"NumberOfPages": 1
+				}`)),
+			},
+			expectedError: fmt.Errorf("Could not find format for %q", "XYZ"),
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, true, false)
+			httpClient.SetResponse("campaigns/campaign_id/clicks.json", tC.response)
+			_, err := client.Campaigns().Clicks("campaign_id", time.Time{}, 1, 100, order.Date, order.DESC)
+			if err == nil {
+				t.Error("Expected date parse error, got none")
+				return
+			}
+			if err.Error() != tC.expectedError.Error() {
+				t.Errorf("Expected '%v', actual '%v'", tC.expectedError, err)
+			}
+		})
+	}
+}
+
 func TestCampaignsAPI_SpamComplaints(t *testing.T) {
 	testCases := []struct {
 		title                 string
@@ -1460,6 +1667,53 @@ func TestCampaignsAPI_SpamComplaints(t *testing.T) {
 			}
 			if diff := cmp.Diff(tC.expected, actual); diff != "" {
 				t.Errorf("Expectations failed (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestCampaignsAPI_SpamComplaintsDateParseError(t *testing.T) {
+	testCases := []struct {
+		title         string
+		response      *http.Response
+		expectedError error
+	}{
+		{
+			title: "invalid date to parse",
+			response: &http.Response{
+				StatusCode: 200,
+				Body: ioutil.NopCloser(bytes.NewBufferString(`{
+					"Results": [
+						{
+							"EmailAddress": "example+1@example.com",
+							"ListID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+							"Date": "XYZ"
+						}
+					],
+					"ResultsOrderedBy": "date",
+					"OrderDirection": "desc",
+					"PageNumber": 1,
+					"PageSize": 100,
+					"RecordsOnThisPage": 4,
+					"TotalNumberOfRecords": 4,
+					"NumberOfPages": 1
+				}`)),
+			},
+			expectedError: fmt.Errorf("Could not find format for %q", "XYZ"),
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.title, func(t *testing.T) {
+			client, httpClient := createClient(t, true, false)
+			httpClient.SetResponse("campaigns/campaign_id/spam.json", tC.response)
+			_, err := client.Campaigns().SpamComplaints("campaign_id", time.Time{}, 1, 100, order.Date, order.DESC)
+			if err == nil {
+				t.Error("Expected date parse error, got none")
+				return
+			}
+			if err.Error() != tC.expectedError.Error() {
+				t.Errorf("Expected '%v', actual '%v'", tC.expectedError, err)
 			}
 		})
 	}
