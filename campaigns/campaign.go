@@ -14,7 +14,7 @@ type BasicDetails struct {
 	ReplyTo string
 	// ListIds represents the list ids of the campaign
 	ListIds []string
-	// ListIds represents the segment ids of the campaign
+	// SegmentIds represents the segment ids of the campaign
 	SegmentIds []string
 }
 
@@ -24,6 +24,6 @@ type WithURLs struct {
 	BasicDetails
 	// Html the URL of the HTML content
 	Html string `json:"HtmlUrl"`
-	// Text the URL of the HTML content
+	// Text the URL of the text content
 	Text string `json:"TextUrl"`
 }

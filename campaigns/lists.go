@@ -1,5 +1,6 @@
 package campaigns
 
+// List the basic details of a list
 type List struct {
 	// ID represents the ID of the list
 	ID string `json:"ListID"`
@@ -7,6 +8,7 @@ type List struct {
 	Name string
 }
 
+// Segment the basic details of a segment
 type Segment struct {
 	// ID represents the ID of the segment
 	ID string `json:"SegmentID"`
@@ -18,6 +20,8 @@ type Segment struct {
 
 // ListsAndSegments represents a grouping of related lists and segments
 type ListsAndSegments struct {
-	Lists    []List
+	// Lists grouped basic list details
+	Lists []List
+	// Segments grouped basic segment details
 	Segments []Segment
 }

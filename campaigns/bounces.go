@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Bounce represent basic details about specific a bounce
+// Bounce represent basic details of a bounce
 type Bounce struct {
 	// Recipient details of the email that bounced
 	Recipient
@@ -18,7 +18,7 @@ type Bounce struct {
 }
 
 type Bounces struct {
-	// Results represent basic details about specific a bounce
+	// Results represent basic details of a bounce
 	Results []Bounce
 	// OrderedBy the field by which the result set was ordered (email/list/date).
 	OrderedBy order.Field

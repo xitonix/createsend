@@ -11,7 +11,7 @@ type OpenDetails struct {
 	Recipient
 	// RecipientLocationDetails represents location details of a recipient
 	RecipientLocationDetails
-	// Date represents the date the the open occurred
+	// Date represents the date the open occurred
 	Date time.Time
 }
 
